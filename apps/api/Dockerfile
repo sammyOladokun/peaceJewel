@@ -1,0 +1,5 @@
+FROM node:20-alpine
+WORKDIR /app
+COPY apps/api ./apps/api
+EXPOSE 4000
+CMD ["node", "apps/api/server.js"]

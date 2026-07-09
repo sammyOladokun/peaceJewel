@@ -1,0 +1,67 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: peacejewel-web
+    env_file:
+      - .env
+    environment:
+      PORT: "3000"
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+    depends_on:
+      - api
+      - postgres
+      - redis
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: peacejewel-api
+    env_file:
+      - .env
+    environment:
+      PORT: "4000"
+    ports:
+      - "4000:4000"
+    volumes:
+      - .:/app
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: peacejewel-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: peacejewel
+      POSTGRES_USER: peacejewel
+      POSTGRES_PASSWORD: peacejewel
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: peacejewel-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    container_name: peacejewel-mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+volumes:
+  postgres_data:
+  redis_data:

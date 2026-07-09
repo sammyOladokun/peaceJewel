@@ -1,0 +1,6 @@
+{
+  "name": "@peacejewel/shared",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts"
+}
