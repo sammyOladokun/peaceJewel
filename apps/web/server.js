@@ -7,7 +7,10 @@ const rootDir = __dirname;
 const assetsDir = path.join(rootDir, "..", "..", "assets");
 
 const html = fs.readFileSync(path.join(rootDir, "index.html"), "utf8");
+const catalogHtml = fs.readFileSync(path.join(rootDir, "catalog.html"), "utf8");
+const productHtml = fs.readFileSync(path.join(rootDir, "product.html"), "utf8");
 const css = fs.readFileSync(path.join(rootDir, "styles.css"), "utf8");
+const menuJs = fs.readFileSync(path.join(rootDir, "menu.js"), "utf8");
 
 const server = http.createServer((request, response) => {
   const requestPath = new URL(request.url, `http://${request.headers.host}`).pathname;
@@ -18,9 +21,27 @@ const server = http.createServer((request, response) => {
     return;
   }
 
+  if (requestPath === "/catalog") {
+    response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+    response.end(catalogHtml);
+    return;
+  }
+
+  if (requestPath === "/product") {
+    response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+    response.end(productHtml);
+    return;
+  }
+
   if (requestPath === "/styles.css") {
     response.writeHead(200, { "Content-Type": "text/css; charset=utf-8" });
     response.end(css);
+    return;
+  }
+
+  if (requestPath === "/menu.js") {
+    response.writeHead(200, { "Content-Type": "application/javascript; charset=utf-8" });
+    response.end(menuJs);
     return;
   }
 

@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PeaceJewel Shop</title>
+    <meta name="description" content="PeaceJewel shop interface with curated jewelry collections and best-selling pieces." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="site-header__inner">
+        <a class="site-brand" href="/">PeaceJewel</a>
+        <nav class="site-nav" id="site-nav">
+          <a href="/#categories">Categories</a>
+          <a href="/#story">About</a>
+          <a href="/catalog" aria-current="page">Shop</a>
+          <a href="/#footer">Contact</a>
+        </nav>
+        <div class="site-actions" aria-label="Utilities">
+          <button class="icon-button" type="button" aria-label="Search">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M16 16l4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </button>
+          <a class="icon-button" href="/cart" aria-label="Cart">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5h2l1.4 8.2a1.5 1.5 0 0 0 1.48 1.24h8.55a1.5 1.5 0 0 0 1.46-1.14l1.36-5.3H7.15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="19" r="1.4" fill="currentColor"/><circle cx="17" cy="19" r="1.4" fill="currentColor"/></svg>
+          </a>
+          <button class="icon-button site-menu-button" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-nav">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="landing-shell shop-shell">
+      <section class="shop-toolbar" id="filters">
+        <div>
+          <p class="eyebrow">Curated Selection</p>
+          <h2>Shop the collection.</h2>
+        </div>
+        <div class="shop-filter">
+          <button class="shop-filter__toggle" type="button" aria-label="Open filters" aria-expanded="false" aria-controls="filter-panel">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 6.5h16M7 12h10M10 17.5h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </button>
+          <div class="shop-filter__panel" id="filter-panel" hidden>
+            <p class="shop-filter__title">Filter by style</p>
+            <div class="shop-filter__chips">
+              <button class="shop-chip shop-chip--active" type="button">All Jewelry</button>
+              <button class="shop-chip" type="button">Everyday Rings</button>
+              <button class="shop-chip" type="button">Gift Picks</button>
+              <button class="shop-chip" type="button">Layered Looks</button>
+              <button class="shop-chip" type="button">Statement Pieces</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="shop-products shop-products--catalog" id="shop-products">
+        <article class="shop-product">
+          <img class="shop-product__image" src="/assets/Vector.png" alt="Gold ring" />
+          <h3>Classic Gold Ring</h3>
+          <div class="shop-product__meta"><span>Available</span><strong>349.00</strong></div>
+          <a class="shop-product__details" href="/product">View Details</a>
+          <button class="button button--dark" type="button">Add To Cart</button>
+        </article>
+
+        <article class="shop-product">
+          <img class="shop-product__image" src="/assets/Vector(1).png" alt="Diamond ring" />
+          <h3>Diamond Accent Ring</h3>
+          <div class="shop-product__meta"><span>Low Stock</span><strong>429.00</strong></div>
+          <a class="shop-product__details" href="/product">View Details</a>
+          <button class="button button--dark" type="button">Add To Cart</button>
+        </article>
+
+        <article class="shop-product">
+          <img class="shop-product__image" src="/assets/Vector(2).png" alt="Bracelet" />
+          <h3>Woven Chain Bracelet</h3>
+          <div class="shop-product__meta"><span>Hot</span><strong>549.29</strong></div>
+          <a class="shop-product__details" href="/product">View Details</a>
+          <button class="button button--dark" type="button">Add To Cart</button>
+        </article>
+
+        <article class="shop-product">
+          <img class="shop-product__image" src="/assets/Vector(3).png" alt="Coral ring" />
+          <h3>Black Coral Ring</h3>
+          <div class="shop-product__meta"><span>Trending</span><strong>320.29</strong></div>
+          <a class="shop-product__details" href="/product">View Details</a>
+          <button class="button button--dark" type="button">Add To Cart</button>
+        </article>
+      </section>
+    </main>
+    <script src="/menu.js"></script>
+    <script>
+      (() => {
+        const filter = document.querySelector('.shop-filter');
+        const toggle = document.querySelector('.shop-filter__toggle');
+        const panel = document.getElementById('filter-panel');
+
+        if (!filter || !toggle || !panel) return;
+
+        const setOpen = (open) => {
+          toggle.setAttribute('aria-expanded', String(open));
+          panel.hidden = !open;
+        };
+
+        toggle.addEventListener('click', (event) => {
+          event.stopPropagation();
+          setOpen(panel.hidden);
+        });
+
+        panel.addEventListener('click', (event) => {
+          event.stopPropagation();
+        });
+
+        document.addEventListener('pointerdown', (event) => {
+          if (!filter.contains(event.target)) setOpen(false);
+        });
+
+        document.addEventListener('keydown', (event) => {
+          if (event.key === 'Escape') setOpen(false);
+        });
+      })();
+    </script>
+  </body>
+</html>
