@@ -40,22 +40,27 @@
     <main class="landing-shell shop-shell">
       <section class="product-page">
         <div class="product-page__media">
-          <p class="eyebrow">New Arrival</p>
+          <p class="eyebrow product-page__eyebrow">New Arrival</p>
           <img src="/assets/Vector(1).png" alt="Gold ring with diamonds" />
+
+          <ul class="product-page__benefits">
+            <li>
+              <span class="eyebrow">Why You’ll Love It</span>
+              <p>Elegant shine, easy styling, and a giftable feel that works for many occasions.</p>
+            </li>
+            <li>
+              <span class="eyebrow">Perfect For</span>
+              <p>Birthdays, anniversaries, self-gifting, and everyday looks.</p>
+            </li>
+          </ul>
         </div>
 
         <div class="product-page__content">
-          <p class="eyebrow">Diamond Accent Ring</p>
-          <h1>Made for gifting, stacking, and everyday wear.</h1>
+          <h1>Diamond Accent Ring</h1>
           <p class="product-page__lead">
             A polished ring with a luminous finish and a timeless silhouette — easy to wear,
             easy to gift, and made to feel special from the first glance.
           </p>
-
-          <div class="product-page__price-row">
-            <strong>429.00</strong>
-            <span>Free shipping over 500.00</span>
-          </div>
 
           <div class="product-page__options">
             <div>
@@ -76,21 +81,18 @@
             </div>
           </div>
 
-          <div class="shop-hero__actions">
-            <a class="button button--dark" href="/catalog">Add To Bag</a>
-            <a class="button button--ghost" href="/catalog">Back To Shop</a>
+          <div class="product-page__purchase-row">
+            <div class="product-page__purchase-top">
+              <div class="product-page__price-row">
+                <strong>Price:</strong>
+                <span>429.00</span>
+              </div>
+            </div>
+            <div class="shop-hero__actions product-page__actions">
+              <a class="button button--ghost product-page__back-button" href="/catalog">Back To Shop</a>
+              <a class="button button--dark product-page__add-button" href="/catalog">Add To Bag</a>
+            </div>
           </div>
-
-          <ul class="product-page__benefits">
-            <li>
-              <span class="eyebrow">Why You’ll Love It</span>
-              <p>Elegant shine, easy styling, and a giftable feel that works for many occasions.</p>
-            </li>
-            <li>
-              <span class="eyebrow">Perfect For</span>
-              <p>Birthdays, anniversaries, self-gifting, and everyday looks.</p>
-            </li>
-          </ul>
         </div>
       </section>
 
@@ -101,24 +103,20 @@
             <h2>Pieces that pair beautifully.</h2>
           </div>
         </div>
-        <div class="shop-products">
+        <div class="shop-products shop-products--catalog">
           <article class="shop-product">
-            <div class="shop-product__image"><img src="/assets/Vector.png" alt="Gold ring" /></div>
-            <div class="shop-product__content">
-              <p class="eyebrow">Everyday Favorite</p>
-              <h3>Classic Gold Ring</h3>
-              <p>Simple, polished, and easy to wear all day.</p>
-              <div class="shop-product__meta"><span>Available</span><strong>349.00</strong></div>
-            </div>
+            <img class="shop-product__image" src="/assets/Vector.png" alt="Gold ring" />
+            <h3>Classic Gold Ring</h3>
+            <div class="shop-product__meta"><span>Available</span><strong>349.00</strong></div>
+            <a class="shop-product__details" href="/product">View Details</a>
+            <button class="button button--dark" type="button">Add To Cart</button>
           </article>
           <article class="shop-product">
-            <div class="shop-product__image"><img src="/assets/Vector(2).png" alt="Bracelet" /></div>
-            <div class="shop-product__content">
-              <p class="eyebrow">Stack It</p>
-              <h3>Woven Chain Bracelet</h3>
-              <p>Designed to layer beautifully with rings and bracelets.</p>
-              <div class="shop-product__meta"><span>Hot</span><strong>549.29</strong></div>
-            </div>
+            <img class="shop-product__image" src="/assets/Vector(2).png" alt="Bracelet" />
+            <h3>Woven Chain Bracelet</h3>
+            <div class="shop-product__meta"><span>Hot</span><strong>549.29</strong></div>
+            <a class="shop-product__details" href="/product">View Details</a>
+            <button class="button button--dark" type="button">Add To Cart</button>
           </article>
         </div>
       </section>
