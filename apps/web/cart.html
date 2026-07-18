@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PeaceJewel Product</title>
-    <meta name="description" content="PeaceJewel product detail page with featured jewelry, options, and related items." />
+    <title>PeaceJewel Cart</title>
+    <meta name="description" content="PeaceJewel cart page with selected items, order summary, and checkout actions." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -34,7 +34,7 @@
           <button class="icon-button" type="button" aria-label="Search">
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M16 16l4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
           </button>
-          <a class="icon-button" href="/cart" aria-label="Cart">
+          <a class="icon-button" href="/cart" aria-label="Cart" aria-current="page">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5h2l1.4 8.2a1.5 1.5 0 0 0 1.48 1.24h8.55a1.5 1.5 0 0 0 1.46-1.14l1.36-5.3H7.15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="19" r="1.4" fill="currentColor"/><circle cx="17" cy="19" r="1.4" fill="currentColor"/></svg>
           </a>
           <button class="icon-button site-menu-button" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-nav">
@@ -45,89 +45,72 @@
     </header>
 
     <main class="landing-shell shop-shell">
-      <section class="product-page">
-        <div class="product-page__media">
-          <p class="eyebrow product-page__eyebrow">New Arrival</p>
-          <img src="/assets/Vector(1).png" alt="Gold ring with diamonds" />
-
-          <ul class="product-page__benefits">
-            <li>
-              <span class="eyebrow">Why You’ll Love It</span>
-              <p>Elegant shine, easy styling, and a giftable feel that works for many occasions.</p>
-            </li>
-            <li>
-              <span class="eyebrow">Perfect For</span>
-              <p>Birthdays, anniversaries, self-gifting, and everyday looks.</p>
-            </li>
-          </ul>
+      <section class="shop-toolbar cart-toolbar">
+        <div>
+          <p class="eyebrow">Your Bag</p>
+          <h2>Cart summary.</h2>
         </div>
-
-        <div class="product-page__content">
-          <h1>Diamond Accent Ring</h1>
-          <p class="product-page__lead">
-            A polished ring with a luminous finish and a timeless silhouette — easy to wear,
-            easy to gift, and made to feel special from the first glance.
-          </p>
-
-          <div class="product-page__options">
-            <div>
-              <p class="eyebrow">Size</p>
-              <div class="shop-toolbar__controls">
-                <button class="shop-chip shop-chip--active" type="button">S</button>
-                <button class="shop-chip" type="button">M</button>
-                <button class="shop-chip" type="button">L</button>
-              </div>
-            </div>
-            <div>
-              <p class="eyebrow">Color</p>
-              <div class="shop-toolbar__controls">
-                <button class="shop-chip shop-chip--active" type="button">Gold</button>
-                <button class="shop-chip" type="button">Rose</button>
-                <button class="shop-chip" type="button">Silver</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="product-page__purchase-row">
-            <div class="product-page__purchase-top">
-              <div class="product-page__price-row">
-                <strong>Price:</strong>
-                <span>429.00</span>
-              </div>
-            </div>
-            <div class="shop-hero__actions product-page__actions">
-              <a class="button button--ghost product-page__back-button" href="/catalog">Back To Shop</a>
-            <button class="button button--dark product-page__add-button" type="button">Add To Bag</button>
-            </div>
-          </div>
-        </div>
+        <a class="button button--ghost cart-toolbar__link" href="/catalog">Continue Shopping</a>
       </section>
 
-      <section class="product-related">
-        <div class="shop-toolbar">
-          <div>
-            <p class="eyebrow">Complete The Look</p>
-            <h2>Pieces that pair beautifully.</h2>
+      <section class="cart-layout" aria-label="Cart contents">
+        <div class="cart-items">
+          <article class="cart-item">
+            <img class="cart-item__image" src="/assets/Vector(1).png" alt="Diamond Accent Ring" />
+            <div class="cart-item__body">
+              <div class="cart-item__top">
+                <div>
+                  <h3>Diamond Accent Ring</h3>
+                  <p>Size: M · Color: Gold</p>
+                </div>
+                <strong>429.00</strong>
+              </div>
+              <div class="cart-item__actions">
+                <div class="cart-qty" aria-label="Quantity selector">
+                  <button type="button">−</button>
+                  <span>01</span>
+                  <button type="button">+</button>
+                </div>
+                <button class="cart-item__remove" type="button">Remove</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="cart-item">
+            <img class="cart-item__image" src="/assets/Vector(2).png" alt="Woven Chain Bracelet" />
+            <div class="cart-item__body">
+              <div class="cart-item__top">
+                <div>
+                  <h3>Woven Chain Bracelet</h3>
+                  <p>Size: L · Color: Silver</p>
+                </div>
+                <strong>549.29</strong>
+              </div>
+              <div class="cart-item__actions">
+                <div class="cart-qty" aria-label="Quantity selector">
+                  <button type="button">−</button>
+                  <span>01</span>
+                  <button type="button">+</button>
+                </div>
+                <button class="cart-item__remove" type="button">Remove</button>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <aside class="cart-summary">
+          <p class="eyebrow">Order Details</p>
+          <h3>Ready to checkout.</h3>
+          <div class="cart-summary__rows">
+            <div><span>Subtotal</span><strong>978.29</strong></div>
+            <div><span>Shipping</span><strong>Free</strong></div>
+            <div><span>Estimated Total</span><strong>978.29</strong></div>
           </div>
-        </div>
-        <div class="shop-products shop-products--catalog">
-          <article class="shop-product">
-            <img class="shop-product__image" src="/assets/Vector.png" alt="Gold ring" />
-            <h3>Classic Gold Ring</h3>
-            <div class="shop-product__meta"><span>Available</span><strong>349.00</strong></div>
-            <a class="shop-product__details" href="/product">View Details</a>
-            <button class="button button--dark" type="button">Add To Cart</button>
-          </article>
-          <article class="shop-product">
-            <img class="shop-product__image" src="/assets/Vector(2).png" alt="Bracelet" />
-            <h3>Woven Chain Bracelet</h3>
-            <div class="shop-product__meta"><span>Hot</span><strong>549.29</strong></div>
-            <a class="shop-product__details" href="/product">View Details</a>
-            <button class="button button--dark" type="button">Add To Cart</button>
-          </article>
-        </div>
+          <a class="button button--dark cart-summary__checkout" href="/checkout">Proceed To Checkout</a>
+        </aside>
       </section>
     </main>
+
       <section class="page-contact">
         <div>
           <p class="eyebrow">Contact</p>

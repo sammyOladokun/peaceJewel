@@ -18,7 +18,14 @@
       <div class="site-header__inner">
         <a class="site-brand" href="/">PeaceJewel</a>
         <nav class="site-nav" id="site-nav">
-          <a href="/#categories">Categories</a>
+          <button class="site-nav__toggle site-nav__link--dropdown" type="button" aria-expanded="false" aria-controls="site-nav-categories">Categories <span class="site-nav__caret" aria-hidden="true"></span></button>
+          <div class="site-nav__dropdown" id="site-nav-categories" aria-label="Categories">
+            <a href="/catalog/new-arrivals">New Arrivals</a>
+            <a href="/catalog/mens-collection">Men's Collection</a>
+            <a href="/catalog/womens-collection">Women's Collection</a>
+            <a href="/catalog/gift-sets">Gift Sets</a>
+            <a href="/catalog/best-sellers">Best Sellers</a>
+          </div>
           <a href="/#story">About</a>
           <a href="/catalog" aria-current="page">Shop</a>
           <a href="/#footer">Contact</a>
@@ -38,95 +45,146 @@
     </header>
 
     <main class="landing-shell shop-shell">
-      <section class="shop-toolbar" id="filters">
+      <section class="shop-toolbar shop-toolbar--intro" id="filters">
         <div>
-          <p class="eyebrow">Curated Selection</p>
           <h2>Shop the collection.</h2>
+          <p class="checkout-toolbar__note">Browse every category in a single glance, with each row scrolling sideways to reveal more pieces.</p>
         </div>
-        <div class="shop-filter">
-          <button class="shop-filter__toggle" type="button" aria-label="Open filters" aria-expanded="false" aria-controls="filter-panel">
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M4 6.5h16M7 12h10M10 17.5h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            </svg>
-          </button>
-          <div class="shop-filter__panel" id="filter-panel" hidden>
-            <p class="shop-filter__title">Filter by style</p>
-            <div class="shop-filter__chips">
-              <button class="shop-chip shop-chip--active" type="button">All Jewelry</button>
-              <button class="shop-chip" type="button">Everyday Rings</button>
-              <button class="shop-chip" type="button">Gift Picks</button>
-              <button class="shop-chip" type="button">Layered Looks</button>
-              <button class="shop-chip" type="button">Statement Pieces</button>
+      </section>
+
+      <section class="shop-category-page" id="shop-products">
+        <div class="shop-category">
+          <div class="shop-category__head">
+            <div>
+              <p class="eyebrow">New Arrivals</p>
+              <h3>Fresh pieces for now.</h3>
             </div>
+            <a class="shop-category__more" href="/catalog/new-arrivals">View more</a>
+          </div>
+          <div class="shop-category__track">
+            <article class="shop-product shop-product--carousel">
+              <img class="shop-product__image" src="/assets/Vector.png" alt="Classic Gold Ring" />
+              <h3>Classic Gold Ring</h3>
+              <div class="shop-product__meta"><span>New</span><strong>349.00</strong></div>
+              <a class="shop-product__details" href="/product">View Details</a>
+              <button class="button button--dark" type="button">Add To Cart</button>
+            </article>
+            <article class="shop-product shop-product--carousel">
+              <img class="shop-product__image" src="/assets/Vector(1).png" alt="Diamond Accent Ring" />
+              <h3>Diamond Accent Ring</h3>
+              <div class="shop-product__meta"><span>New</span><strong>429.00</strong></div>
+              <a class="shop-product__details" href="/product">View Details</a>
+              <button class="button button--dark" type="button">Add To Cart</button>
+            </article>
+            <article class="shop-product shop-product--carousel">
+              <img class="shop-product__image" src="/assets/Vector(2).png" alt="Woven Chain Bracelet" />
+              <h3>Woven Chain Bracelet</h3>
+              <div class="shop-product__meta"><span>New</span><strong>549.29</strong></div>
+              <a class="shop-product__details" href="/product">View Details</a>
+              <button class="button button--dark" type="button">Add To Cart</button>
+            </article>
+            <article class="shop-product shop-product--carousel">
+              <img class="shop-product__image" src="/assets/Vector(3).png" alt="Black Coral Ring" />
+              <h3>Black Coral Ring</h3>
+              <div class="shop-product__meta"><span>New</span><strong>320.29</strong></div>
+              <a class="shop-product__details" href="/product">View Details</a>
+              <button class="button button--dark" type="button">Add To Cart</button>
+            </article>
+            <article class="shop-product shop-product--carousel">
+              <img class="shop-product__image" src="/assets/Vector.png" alt="Layered Gold Band" />
+              <h3>Layered Gold Band</h3>
+              <div class="shop-product__meta"><span>New</span><strong>289.00</strong></div>
+              <a class="shop-product__details" href="/product">View Details</a>
+              <button class="button button--dark" type="button">Add To Cart</button>
+            </article>
+          </div>
+        </div>
+
+        <div class="shop-category">
+          <div class="shop-category__head">
+            <div>
+              <p class="eyebrow">Men's Collection</p>
+              <h3>Clean lines, bold finish.</h3>
+            </div>
+            <a class="shop-category__more" href="/catalog/mens-collection">View more</a>
+          </div>
+          <div class="shop-category__track">
+            <article class="shop-product shop-product--carousel"><img class="shop-product__image" src="/assets/Vector(2).png" alt="Woven Chain Bracelet" /><h3>Woven Chain Bracelet</h3><div class="shop-product__meta"><span>Men's</span><strong>549.29</strong></div><a class="shop-product__details" href="/product">View Details</a><button class="button button--dark" type="button">Add To Cart</button></article>
+            <article class="shop-product shop-product--carousel"><img class="shop-product__image" src="/assets/Vector(3).png" alt="Black Coral Ring" /><h3>Black Coral Ring</h3><div class="shop-product__meta"><span>Men's</span><strong>320.29</strong></div><a class="shop-product__details" href="/product">View Details</a><button class="button button--dark" type="button">Add To Cart</button></article>
+            <article class="shop-product shop-product--carousel"><img class="shop-product__image" src="/assets/Vector.png" alt="Classic Gold Ring" /><h3>Classic Gold Ring</h3><div class="shop-product__meta"><span>Men's</span><strong>349.00</strong></div><a class="shop-product__details" href="/product">View Details</a><button class="button button--dark" type="button">Add To Cart</button></article>
+            <article class="shop-product shop-product--carousel"><img class="shop-product__image" src="/assets/Vector(1).png" alt="Matte Gold Band" /><h3>Matte Gold Band</h3><div class="shop-product__meta"><span>Men's</span><strong>399.00</strong></div><a class="shop-product__details" href="/product">View Details</a><button class="button button--dark" type="button">Add To Cart</button></article>
+            <article class="shop-product shop-product--carousel"><img class="shop-product__image" src="/assets/Vector(2).png" alt="Rope Link Bracelet" /><h3>Rope Link Bracelet</h3><div class="shop-product__meta"><span>Men's</span><strong>499.00</strong></div><a class="shop-product__details" href="/product">View Details</a><button class="button button--dark" type="button">Add To Cart</button></article>
+          </div>
+        </div>
+
+        <div class="shop-category">
+          <div class="shop-category__head">
+            <div>
+              <p class="eyebrow">Women's Collection</p>
+              <h3>Soft shine, strong presence.</h3>
+            </div>
+            <a class="shop-category__more" href="/catalog/womens-collection">View more</a>
+          </div>
+          <div class="shop-category__track">
+            <article class="shop-product shop-product--carousel"><img class="shop-product__image" src="/assets/Vector(1).png" alt="Diamond Accent Ring" /><h3>Diamond Accent Ring</h3><div class="shop-product__meta"><span>Women’s</span><strong>429.00</strong></div><a class="shop-product__details" href="/product">View Details</a><button class="button button--dark" type="button">Add To Cart</button></article>
+            <article class="shop-product shop-product--carousel"><img class="shop-product__image" src="/assets/Vector.png" alt="Classic Gold Ring" /><h3>Classic Gold Ring</h3><div class="shop-product__meta"><span>Women’s</span><strong>349.00</strong></div><a class="shop-product__details" href="/product">View Details</a><button class="button button--dark" type="button">Add To Cart</button></article>
+            <article class="shop-product shop-product--carousel"><img class="shop-product__image" src="/assets/Vector(2).png" alt="Layered Gold Ring" /><h3>Layered Gold Ring</h3><div class="shop-product__meta"><span>Women’s</span><strong>469.00</strong></div><a class="shop-product__details" href="/product">View Details</a><button class="button button--dark" type="button">Add To Cart</button></article>
+            <article class="shop-product shop-product--carousel"><img class="shop-product__image" src="/assets/Vector(3).png" alt="Rose Curve Ring" /><h3>Rose Curve Ring</h3><div class="shop-product__meta"><span>Women’s</span><strong>389.00</strong></div><a class="shop-product__details" href="/product">View Details</a><button class="button button--dark" type="button">Add To Cart</button></article>
+            <article class="shop-product shop-product--carousel"><img class="shop-product__image" src="/assets/Vector(1).png" alt="Pearl Glow Ring" /><h3>Pearl Glow Ring</h3><div class="shop-product__meta"><span>Women’s</span><strong>439.00</strong></div><a class="shop-product__details" href="/product">View Details</a><button class="button button--dark" type="button">Add To Cart</button></article>
+          </div>
+        </div>
+
+        <div class="shop-category">
+          <div class="shop-category__head">
+            <div>
+              <p class="eyebrow">Gift Sets</p>
+              <h3>Easy wins for gifting.</h3>
+            </div>
+            <a class="shop-category__more" href="/catalog/gift-sets">View more</a>
+          </div>
+          <div class="shop-category__track">
+            <article class="shop-product shop-product--carousel"><img class="shop-product__image" src="/assets/Vector.png" alt="Signature Duo Set" /><h3>Signature Duo Set</h3><div class="shop-product__meta"><span>Gift</span><strong>699.00</strong></div><a class="shop-product__details" href="/product">View Details</a><button class="button button--dark" type="button">Add To Cart</button></article>
+            <article class="shop-product shop-product--carousel"><img class="shop-product__image" src="/assets/Vector(1).png" alt="Gold & Shine Set" /><h3>Gold &amp; Shine Set</h3><div class="shop-product__meta"><span>Gift</span><strong>849.00</strong></div><a class="shop-product__details" href="/product">View Details</a><button class="button button--dark" type="button">Add To Cart</button></article>
+            <article class="shop-product shop-product--carousel"><img class="shop-product__image" src="/assets/Vector(2).png" alt="Layered Stack Set" /><h3>Layered Stack Set</h3><div class="shop-product__meta"><span>Gift</span><strong>929.00</strong></div><a class="shop-product__details" href="/product">View Details</a><button class="button button--dark" type="button">Add To Cart</button></article>
+            <article class="shop-product shop-product--carousel"><img class="shop-product__image" src="/assets/Vector(3).png" alt="Coral Glow Set" /><h3>Coral Glow Set</h3><div class="shop-product__meta"><span>Gift</span><strong>759.00</strong></div><a class="shop-product__details" href="/product">View Details</a><button class="button button--dark" type="button">Add To Cart</button></article>
+            <article class="shop-product shop-product--carousel"><img class="shop-product__image" src="/assets/Vector.png" alt="Everyday Gift Pair" /><h3>Everyday Gift Pair</h3><div class="shop-product__meta"><span>Gift</span><strong>659.00</strong></div><a class="shop-product__details" href="/product">View Details</a><button class="button button--dark" type="button">Add To Cart</button></article>
+          </div>
+        </div>
+
+        <div class="shop-category">
+          <div class="shop-category__head">
+            <div>
+              <p class="eyebrow">Best Sellers</p>
+              <h3>The pieces people keep choosing.</h3>
+            </div>
+            <a class="shop-category__more" href="/catalog/best-sellers">View more</a>
+          </div>
+          <div class="shop-category__track">
+            <article class="shop-product shop-product--carousel"><img class="shop-product__image" src="/assets/Vector.png" alt="Classic Gold Ring" /><h3>Classic Gold Ring</h3><div class="shop-product__meta"><span>Top</span><strong>349.00</strong></div><a class="shop-product__details" href="/product">View Details</a><button class="button button--dark" type="button">Add To Cart</button></article>
+            <article class="shop-product shop-product--carousel"><img class="shop-product__image" src="/assets/Vector(1).png" alt="Diamond Accent Ring" /><h3>Diamond Accent Ring</h3><div class="shop-product__meta"><span>Top</span><strong>429.00</strong></div><a class="shop-product__details" href="/product">View Details</a><button class="button button--dark" type="button">Add To Cart</button></article>
+            <article class="shop-product shop-product--carousel"><img class="shop-product__image" src="/assets/Vector(2).png" alt="Woven Chain Bracelet" /><h3>Woven Chain Bracelet</h3><div class="shop-product__meta"><span>Top</span><strong>549.29</strong></div><a class="shop-product__details" href="/product">View Details</a><button class="button button--dark" type="button">Add To Cart</button></article>
+            <article class="shop-product shop-product--carousel"><img class="shop-product__image" src="/assets/Vector(3).png" alt="Black Coral Ring" /><h3>Black Coral Ring</h3><div class="shop-product__meta"><span>Top</span><strong>320.29</strong></div><a class="shop-product__details" href="/product">View Details</a><button class="button button--dark" type="button">Add To Cart</button></article>
+            <article class="shop-product shop-product--carousel"><img class="shop-product__image" src="/assets/Vector.png" alt="Layered Gold Ring" /><h3>Layered Gold Ring</h3><div class="shop-product__meta"><span>Top</span><strong>469.00</strong></div><a class="shop-product__details" href="/product">View Details</a><button class="button button--dark" type="button">Add To Cart</button></article>
           </div>
         </div>
       </section>
-
-      <section class="shop-products shop-products--catalog" id="shop-products">
-        <article class="shop-product">
-          <img class="shop-product__image" src="/assets/Vector.png" alt="Gold ring" />
-          <h3>Classic Gold Ring</h3>
-          <div class="shop-product__meta"><span>Available</span><strong>349.00</strong></div>
-          <a class="shop-product__details" href="/product">View Details</a>
-          <button class="button button--dark" type="button">Add To Cart</button>
-        </article>
-
-        <article class="shop-product">
-          <img class="shop-product__image" src="/assets/Vector(1).png" alt="Diamond ring" />
-          <h3>Diamond Accent Ring</h3>
-          <div class="shop-product__meta"><span>Low Stock</span><strong>429.00</strong></div>
-          <a class="shop-product__details" href="/product">View Details</a>
-          <button class="button button--dark" type="button">Add To Cart</button>
-        </article>
-
-        <article class="shop-product">
-          <img class="shop-product__image" src="/assets/Vector(2).png" alt="Bracelet" />
-          <h3>Woven Chain Bracelet</h3>
-          <div class="shop-product__meta"><span>Hot</span><strong>549.29</strong></div>
-          <a class="shop-product__details" href="/product">View Details</a>
-          <button class="button button--dark" type="button">Add To Cart</button>
-        </article>
-
-        <article class="shop-product">
-          <img class="shop-product__image" src="/assets/Vector(3).png" alt="Coral ring" />
-          <h3>Black Coral Ring</h3>
-          <div class="shop-product__meta"><span>Trending</span><strong>320.29</strong></div>
-          <a class="shop-product__details" href="/product">View Details</a>
-          <button class="button button--dark" type="button">Add To Cart</button>
-        </article>
+      <section class="page-contact">
+        <div>
+          <p class="eyebrow">Contact</p>
+          <h2>Need help with an order?</h2>
+          <p>Reach PeaceJewel for sizing help, order updates, gifting questions, or store support.</p>
+        </div>
+        <a class="button button--dark" href="mailto:hello@peacejewel.com">hello@peacejewel.com</a>
       </section>
+
+      <footer class="site-footer" id="footer">
+        <div><h3>Shop</h3><ul><li>Best Sellers</li><li>New Drops</li><li>Gift Sets</li><li>Sale Picks</li></ul></div>
+        <div><h3>Support</h3><ul><li>Shipping</li><li>Returns</li><li>Size Guide</li><li>FAQs</li></ul></div>
+        <div><h3>Stay Connected</h3><p>Follow PeaceJewel for fresh offers, new arrivals, and limited-time deals you won’t want to miss.</p><div class="footer-social"><svg viewBox="0 0 24 24"><path d="M20.5 7.2c-.6.3-1.2.5-1.9.6.7-.4 1.2-1 1.5-1.8-.7.4-1.4.7-2.2.9a3.3 3.3 0 0 0-5.7 3c-2.7-.1-5.1-1.5-6.7-3.6-.9 1.6-.4 3.5 1 4.5-.5 0-1-.1-1.5-.4 0 1.9 1.3 3.5 3.1 3.9-.5.1-1 .1-1.6 0 .5 1.5 2 2.7 3.8 2.8a6.6 6.6 0 0 1-4.9 1.4 9.3 9.3 0 0 0 5 1.5c6 0 9.3-5 9.3-9.3v-.4c.7-.5 1.3-1.1 1.8-1.8z"/></svg><svg viewBox="0 0 24 24"><path d="M11 3h3v4h3v3h-3v4.9c0 1.1.5 1.6 1.8 1.6h1.4V19c-.6.3-1.8.6-3 .6-2.5 0-3.7-1.3-3.7-3.5V10H8V7.2c2-.2 3-.9 3-4.2z"/></svg><svg viewBox="0 0 24 24"><path d="M6.5 8.6H3.8V19h2.7V8.6zM5.2 4.2a1.6 1.6 0 1 0 0 3.2 1.6 1.6 0 0 0 0-3.2zM20.2 19h-2.7v-5.4c0-1.3 0-3-1.9-3s-2.2 1.4-2.2 2.8V19h-2.7V8.6h2.6v1.4h0c.4-.8 1.5-1.6 3.2-1.6 3.5 0 4.1 2.3 4.1 5.2V19z"/></svg></div></div>
+      </footer>
+      <div class="copyright">Copyright 2026 - PeaceJewel.com All rights reserved</div>
     </main>
     <script src="/menu.js"></script>
-    <script>
-      (() => {
-        const filter = document.querySelector('.shop-filter');
-        const toggle = document.querySelector('.shop-filter__toggle');
-        const panel = document.getElementById('filter-panel');
-
-        if (!filter || !toggle || !panel) return;
-
-        const setOpen = (open) => {
-          toggle.setAttribute('aria-expanded', String(open));
-          panel.hidden = !open;
-        };
-
-        toggle.addEventListener('click', (event) => {
-          event.stopPropagation();
-          setOpen(panel.hidden);
-        });
-
-        panel.addEventListener('click', (event) => {
-          event.stopPropagation();
-        });
-
-        document.addEventListener('pointerdown', (event) => {
-          if (!filter.contains(event.target)) setOpen(false);
-        });
-
-        document.addEventListener('keydown', (event) => {
-          if (event.key === 'Escape') setOpen(false);
-        });
-      })();
-    </script>
+    <script src="/store.js"></script>
   </body>
 </html>

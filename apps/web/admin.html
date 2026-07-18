@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PeaceJewel Admin Inventory</title>
+    <meta name="description" content="PeaceJewel admin inventory page for managing products, stock, pricing, and store updates." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="site-header__inner">
+        <a class="site-brand" href="/">PeaceJewel</a>
+        <nav class="site-nav" id="site-nav">
+          <a href="/catalog">Catalog</a>
+          <a href="/product">Products</a>
+          <a href="/cart">Cart</a>
+          <a href="/checkout">Checkout</a>
+          <a href="/admin" aria-current="page">Admin</a>
+        </nav>
+        <div class="site-actions" aria-label="Utilities">
+          <button class="icon-button" type="button" aria-label="Search">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M16 16l4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </button>
+          <a class="icon-button" href="/cart" aria-label="Cart">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5h2l1.4 8.2a1.5 1.5 0 0 0 1.48 1.24h8.55a1.5 1.5 0 0 0 1.46-1.14l1.36-5.3H7.15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="19" r="1.4" fill="currentColor"/><circle cx="17" cy="19" r="1.4" fill="currentColor"/></svg>
+          </a>
+          <button class="icon-button site-menu-button" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-nav">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="landing-shell shop-shell">
+      <section class="shop-toolbar admin-toolbar">
+        <div>
+          <p class="eyebrow">Admin Inventory</p>
+          <h2>Manage stock and products.</h2>
+          <p class="admin-toolbar__note">Track inventory, adjust availability, update pricing, and catch low-stock items before they sell out.</p>
+        </div>
+        <div class="admin-toolbar__actions">
+          <a class="button button--ghost" href="/catalog">View Store</a>
+          <button class="button button--dark" type="button" data-admin-action="save">Save Changes</button>
+        </div>
+      </section>
+
+      <section class="admin-stats" aria-label="Inventory summary">
+        <article class="admin-stat">
+          <p>Active SKUs</p>
+          <strong>24</strong>
+        </article>
+        <article class="admin-stat">
+          <p>Low Stock Items</p>
+          <strong>03</strong>
+        </article>
+        <article class="admin-stat">
+          <p>Out of Stock</p>
+          <strong>01</strong>
+        </article>
+        <article class="admin-stat">
+          <p>Weekly Orders</p>
+          <strong>86</strong>
+        </article>
+      </section>
+
+      <section class="admin-grid" aria-label="Admin inventory manager">
+        <div class="admin-main">
+          <section class="admin-card">
+            <div class="admin-card__heading">
+              <div>
+                <p class="eyebrow">Inventory List</p>
+                <h3>Products in store.</h3>
+              </div>
+              <div class="admin-card__meta">Last synced 12 minutes ago</div>
+            </div>
+
+            <div class="admin-table">
+              <div class="admin-table__row admin-table__row--head">
+                <span>Product</span>
+                <span>Status</span>
+                <span>Stock</span>
+                <span>Price</span>
+              </div>
+
+              <div class="admin-table__row">
+                <div class="admin-product">
+                  <img src="/assets/Vector.png" alt="Classic Gold Ring" />
+                  <div>
+                    <strong>Classic Gold Ring</strong>
+                    <span>SKU PJ-001</span>
+                  </div>
+                </div>
+                <span class="admin-badge admin-badge--ok">In Stock</span>
+                <div class="admin-stock-control">
+                  <button type="button" data-stock-action="decrease">−</button>
+                  <strong>18</strong>
+                  <button type="button" data-stock-action="increase">+</button>
+                </div>
+                <strong>349.00</strong>
+              </div>
+
+              <div class="admin-table__row">
+                <div class="admin-product">
+                  <img src="/assets/Vector(1).png" alt="Diamond Accent Ring" />
+                  <div>
+                    <strong>Diamond Accent Ring</strong>
+                    <span>SKU PJ-002</span>
+                  </div>
+                </div>
+                <span class="admin-badge admin-badge--warn">Low Stock</span>
+                <div class="admin-stock-control">
+                  <button type="button" data-stock-action="decrease">−</button>
+                  <strong>04</strong>
+                  <button type="button" data-stock-action="increase">+</button>
+                </div>
+                <strong>429.00</strong>
+              </div>
+
+              <div class="admin-table__row">
+                <div class="admin-product">
+                  <img src="/assets/Vector(2).png" alt="Woven Chain Bracelet" />
+                  <div>
+                    <strong>Woven Chain Bracelet</strong>
+                    <span>SKU PJ-003</span>
+                  </div>
+                </div>
+                <span class="admin-badge admin-badge--ok">In Stock</span>
+                <div class="admin-stock-control">
+                  <button type="button" data-stock-action="decrease">−</button>
+                  <strong>11</strong>
+                  <button type="button" data-stock-action="increase">+</button>
+                </div>
+                <strong>549.29</strong>
+              </div>
+
+              <div class="admin-table__row">
+                <div class="admin-product">
+                  <img src="/assets/Vector(3).png" alt="Black Coral Ring" />
+                  <div>
+                    <strong>Black Coral Ring</strong>
+                    <span>SKU PJ-004</span>
+                  </div>
+                </div>
+                <span class="admin-badge admin-badge--empty">Out</span>
+                <div class="admin-stock-control">
+                  <button type="button" data-stock-action="decrease">−</button>
+                  <strong>00</strong>
+                  <button type="button" data-stock-action="increase">+</button>
+                </div>
+                <strong>320.29</strong>
+              </div>
+            </div>
+          </section>
+
+          <section class="admin-card">
+            <div class="admin-card__heading">
+              <div>
+                <p class="eyebrow">Quick Update</p>
+                <h3>Edit an item fast.</h3>
+              </div>
+            </div>
+
+            <form class="admin-form">
+              <label class="admin-field admin-field--full">
+                <span>Product Name</span>
+                <input type="text" value="Diamond Accent Ring" data-admin-field="name" />
+              </label>
+              <label class="admin-field">
+                <span>SKU</span>
+                <input type="text" value="PJ-002" data-admin-field="sku" />
+              </label>
+              <label class="admin-field">
+                <span>Category</span>
+                <select data-admin-field="category">
+                  <option>Rings</option>
+                  <option>Bracelets</option>
+                  <option>Earrings</option>
+                </select>
+              </label>
+              <label class="admin-field">
+                <span>Price</span>
+                <input type="text" value="429.00" data-admin-field="price" />
+              </label>
+              <label class="admin-field">
+                <span>Stock</span>
+                <input type="number" value="4" data-admin-field="stock" />
+              </label>
+              <label class="admin-field admin-field--full">
+                <span>Description</span>
+                <textarea rows="4" data-admin-field="description">A polished ring with a luminous finish and a timeless silhouette.</textarea>
+              </label>
+              <div class="admin-form__actions">
+                <button class="button button--ghost" type="button" data-admin-action="duplicate">Duplicate Product</button>
+                <button class="button button--dark" type="button" data-admin-action="update">Update Item</button>
+              </div>
+            </form>
+          </section>
+        </div>
+
+        <aside class="admin-sidebar">
+          <section class="admin-card">
+            <p class="eyebrow">Alerts</p>
+            <h3>Needs attention.</h3>
+            <ul class="admin-list">
+              <li>
+                <strong>Black Coral Ring</strong>
+                <span>Inventory reached zero today.</span>
+              </li>
+              <li>
+                <strong>Diamond Accent Ring</strong>
+                <span>Reorder soon — 4 units left.</span>
+              </li>
+              <li>
+                <strong>Homepage Hero</strong>
+                <span>Swap seasonal imagery next week.</span>
+              </li>
+            </ul>
+          </section>
+
+          <section class="admin-card">
+            <p class="eyebrow">Catalog Controls</p>
+            <h3>Store operations.</h3>
+            <div class="admin-ops">
+              <button class="button button--ghost" type="button" data-admin-action="add">Add Product</button>
+              <button class="button button--ghost" type="button" data-admin-action="archive">Archive Item</button>
+              <button class="button button--ghost" type="button" data-admin-action="export">Export CSV</button>
+            </div>
+          </section>
+        </aside>
+      </section>
+    </main>
+
+      <section class="page-contact">
+        <div>
+          <p class="eyebrow">Contact</p>
+          <h2>Need help with an order?</h2>
+          <p>Reach PeaceJewel for sizing help, order updates, gifting questions, or store support.</p>
+        </div>
+        <a class="button button--dark" href="mailto:hello@peacejewel.com">hello@peacejewel.com</a>
+      </section>
+
+      <footer class="site-footer" id="footer">
+        <div><h3>Shop</h3><ul><li>Best Sellers</li><li>New Drops</li><li>Gift Sets</li><li>Sale Picks</li></ul></div>
+        <div><h3>Support</h3><ul><li>Shipping</li><li>Returns</li><li>Size Guide</li><li>FAQs</li></ul></div>
+        <div><h3>Stay Connected</h3><p>Follow PeaceJewel for fresh offers, new arrivals, and limited-time deals you won’t want to miss.</p><div class="footer-social"><svg viewBox="0 0 24 24"><path d="M20.5 7.2c-.6.3-1.2.5-1.9.6.7-.4 1.2-1 1.5-1.8-.7.4-1.4.7-2.2.9a3.3 3.3 0 0 0-5.7 3c-2.7-.1-5.1-1.5-6.7-3.6-.9 1.6-.4 3.5 1 4.5-.5 0-1-.1-1.5-.4 0 1.9 1.3 3.5 3.1 3.9-.5.1-1 .1-1.6 0 .5 1.5 2 2.7 3.8 2.8a6.6 6.6 0 0 1-4.9 1.4 9.3 9.3 0 0 0 5 1.5c6 0 9.3-5 9.3-9.3v-.4c.7-.5 1.3-1.1 1.8-1.8z"/></svg><svg viewBox="0 0 24 24"><path d="M11 3h3v4h3v3h-3v4.9c0 1.1.5 1.6 1.8 1.6h1.4V19c-.6.3-1.8.6-3 .6-2.5 0-3.7-1.3-3.7-3.5V10H8V7.2c2-.2 3-.9 3-4.2z"/></svg><svg viewBox="0 0 24 24"><path d="M6.5 8.6H3.8V19h2.7V8.6zM5.2 4.2a1.6 1.6 0 1 0 0 3.2 1.6 1.6 0 0 0 0-3.2zM20.2 19h-2.7v-5.4c0-1.3 0-3-1.9-3s-2.2 1.4-2.2 2.8V19h-2.7V8.6h2.6v1.4h0c.4-.8 1.5-1.6 3.2-1.6 3.5 0 4.1 2.3 4.1 5.2V19z"/></svg></div></div>
+      </footer>
+      <div class="copyright">Copyright 2026 - PeaceJewel.com All rights reserved</div>
+    <script src="/menu.js"></script>
+    <script src="/store.js"></script>
+  </body>
+</html>

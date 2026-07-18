@@ -21,7 +21,14 @@
       <div class="site-header__inner">
         <a class="site-brand" href="/">PeaceJewel</a>
         <nav class="site-nav" id="site-nav">
-          <a href="/#categories">Categories</a>
+          <button class="site-nav__toggle site-nav__link--dropdown" type="button" aria-expanded="false" aria-controls="site-nav-categories">Categories <span class="site-nav__caret" aria-hidden="true"></span></button>
+          <div class="site-nav__dropdown" id="site-nav-categories" aria-label="Categories">
+            <a href="/catalog/new-arrivals">New Arrivals</a>
+            <a href="/catalog/mens-collection">Men's Collection</a>
+            <a href="/catalog/womens-collection">Women's Collection</a>
+            <a href="/catalog/gift-sets">Gift Sets</a>
+            <a href="/catalog/best-sellers">Best Sellers</a>
+          </div>
           <a href="/#story">About</a>
           <a href="/catalog">Shop</a>
           <a href="/#footer">Contact</a>
@@ -96,7 +103,7 @@
             <div class="collection-row__details">
               <p>This statement bracelet adds instant polish, premium shine, and easy styling to your outfit.</p>
               <div class="size-row"><span>Size</span><span>S &nbsp; M &nbsp; L</span></div>
-              <div class="buy-row"><button class="button button--dark">Add To Cart</button><span class="price">549.29</span></div>
+              <div class="buy-row"><button class="button button--dark" type="button">Add To Cart</button><span class="price">549.29</span></div>
             </div>
           </div>
         </article>
@@ -107,7 +114,7 @@
             <div class="collection-row__details">
               <p>A luxe piece with strong gift appeal, crafted to feel special, look premium, and convert on first glance.</p>
               <div class="size-row"><span>Size</span><span>S &nbsp; M &nbsp; L</span></div>
-              <div class="buy-row"><button class="button button--dark">Add To Cart</button><span class="price">320.29</span></div>
+              <div class="buy-row"><button class="button button--dark" type="button">Add To Cart</button><span class="price">320.29</span></div>
             </div>
           </div>
         </article>
@@ -153,6 +160,15 @@
         </div>
       </section>
 
+      <section class="page-contact">
+        <div>
+          <p class="eyebrow">Contact</p>
+          <h2>Need help with an order?</h2>
+          <p>Reach PeaceJewel for sizing help, order updates, gifting questions, or store support.</p>
+        </div>
+        <a class="button button--dark" href="mailto:hello@peacejewel.com">hello@peacejewel.com</a>
+      </section>
+
       <footer class="site-footer" id="footer">
         <div><h3>Shop</h3><ul><li>Best Sellers</li><li>New Drops</li><li>Gift Sets</li><li>Sale Picks</li></ul></div>
         <div><h3>Support</h3><ul><li>Shipping</li><li>Returns</li><li>Size Guide</li><li>FAQs</li></ul></div>
@@ -161,5 +177,6 @@
       <div class="copyright">Copyright 2026 - PeaceJewel.com All rights reserved</div>
     </main>
     <script src="/menu.js"></script>
+    <script src="/store.js"></script>
   </body>
 </html>
