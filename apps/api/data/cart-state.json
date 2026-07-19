@@ -1,0 +1,42 @@
+{
+  "CART-C4229F4E00E0": [
+    {
+      "id": "diamond-accent-ring-rose",
+      "name": "Diamond Accent Ring",
+      "image": "/assets/Vector(1).png",
+      "priceCents": 42900,
+      "quantity": 5,
+      "variant": "Rose",
+      "source": "/product"
+    },
+    {
+      "id": "gold-woven-chainbracelet-in-black-549-29",
+      "name": "Gold Woven ChainBracelet In Black",
+      "image": "/assets/Vector(2).png",
+      "priceCents": 54929,
+      "quantity": 3,
+      "variant": "Featured selection",
+      "source": "/"
+    },
+    {
+      "id": "gold-black-coralring-320-29",
+      "name": "Gold Black CoralRing",
+      "image": "/assets/Vector(3).png",
+      "priceCents": 32029,
+      "quantity": 1,
+      "variant": "Featured selection",
+      "source": "/"
+    }
+  ],
+  "CART-MRQZ87KBN2GEBK": [
+    {
+      "id": "gold-woven-chainbracelet-in-black-549-29",
+      "name": "Gold Woven ChainBracelet In Black",
+      "image": "/assets/Vector(2).png",
+      "priceCents": 54929,
+      "quantity": 1,
+      "variant": "Featured selection",
+      "source": "/"
+    }
+  ]
+}

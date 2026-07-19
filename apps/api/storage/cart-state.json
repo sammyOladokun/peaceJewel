@@ -1,0 +1,24 @@
+{
+  "CART-C4229F4E00E0": [
+    {
+      "id": "india-diamond-l-gold",
+      "name": "India Diamond",
+      "image": "/assets/Vector.png",
+      "priceCents": 34500,
+      "quantity": 1,
+      "variant": "L · Gold",
+      "source": "/catalog"
+    }
+  ],
+  "CART-MRQZ87KBN2GEBK": [
+    {
+      "id": "classic-gold-ring-s-gold",
+      "name": "Classic Gold Ring",
+      "image": "/assets/Vector.png",
+      "priceCents": 34900,
+      "quantity": 1,
+      "variant": "S · Gold",
+      "source": "/catalog"
+    }
+  ]
+}

@@ -32,6 +32,30 @@
         event.stopPropagation();
         setCategoryOpen(categoryToggle.dataset.open !== 'true');
       });
+
+      nav.addEventListener('mouseenter', () => {
+        if (window.matchMedia('(min-width: 769px)').matches) {
+          setCategoryOpen(false);
+        }
+      });
+
+      categoryToggle.addEventListener('mouseenter', () => {
+        if (window.matchMedia('(min-width: 769px)').matches) {
+          setCategoryOpen(true);
+        }
+      });
+
+      categoryDropdown.addEventListener('mouseenter', () => {
+        if (window.matchMedia('(min-width: 769px)').matches) {
+          setCategoryOpen(true);
+        }
+      });
+
+      nav.addEventListener('mouseleave', () => {
+        if (window.matchMedia('(min-width: 769px)').matches) {
+          setCategoryOpen(false);
+        }
+      });
     }
 
     nav.addEventListener('click', () => {

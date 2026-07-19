@@ -18,11 +18,11 @@
       <div class="site-header__inner">
         <a class="site-brand" href="/">PeaceJewel</a>
         <nav class="site-nav" id="site-nav">
-          <a href="/catalog">Catalog</a>
-          <a href="/product">Products</a>
-          <a href="/cart">Cart</a>
-          <a href="/checkout">Checkout</a>
-          <a href="/admin" aria-current="page">Admin</a>
+          <a href="#overview">Dashboard</a>
+          <a href="#inventory">Inventory</a>
+          <a href="#orders">Orders</a>
+          <a href="#alerts">Alerts</a>
+          <a href="/catalog">View Store</a>
         </nav>
         <div class="site-actions" aria-label="Utilities">
           <button class="icon-button" type="button" aria-label="Search">
@@ -38,7 +38,7 @@
       </div>
     </header>
 
-    <main class="landing-shell shop-shell">
+    <main class="landing-shell shop-shell admin-shell">
       <section class="shop-toolbar admin-toolbar">
         <div>
           <p class="eyebrow">Admin Inventory</p>
@@ -51,28 +51,36 @@
         </div>
       </section>
 
-      <section class="admin-stats" aria-label="Inventory summary">
+      <nav class="admin-page-nav" aria-label="Admin navigation">
+        <a href="#overview">Overview</a>
+        <a href="#inventory">Inventory</a>
+        <a href="#orders">Orders</a>
+        <a href="#alerts">Alerts</a>
+        <a href="#settings">Settings</a>
+      </nav>
+
+      <section class="admin-stats" id="overview" aria-label="Inventory summary">
         <article class="admin-stat">
           <p>Active SKUs</p>
           <strong>24</strong>
         </article>
         <article class="admin-stat">
-          <p>Low Stock Items</p>
+          <p>Pending Orders</p>
           <strong>03</strong>
         </article>
         <article class="admin-stat">
-          <p>Out of Stock</p>
+          <p>Low Stock Items</p>
           <strong>01</strong>
         </article>
         <article class="admin-stat">
-          <p>Weekly Orders</p>
+          <p>Out of Stock</p>
           <strong>86</strong>
         </article>
       </section>
 
       <section class="admin-grid" aria-label="Admin inventory manager">
         <div class="admin-main">
-          <section class="admin-card">
+          <section class="admin-card" id="inventory">
             <div class="admin-card__heading">
               <div>
                 <p class="eyebrow">Inventory List</p>
@@ -159,7 +167,7 @@
             </div>
           </section>
 
-          <section class="admin-card">
+          <section class="admin-card" id="settings">
             <div class="admin-card__heading">
               <div>
                 <p class="eyebrow">Quick Update</p>
@@ -172,9 +180,19 @@
                 <span>Product Name</span>
                 <input type="text" value="Diamond Accent Ring" data-admin-field="name" />
               </label>
+              <label class="admin-field admin-field--full">
+                <span>Product Image</span>
+                <div class="admin-image-picker">
+                  <img class="admin-image-picker__preview" src="/assets/Vector(1).png" alt="Selected product preview" data-admin-preview="image" />
+                  <div class="admin-image-picker__controls">
+                    <input type="file" accept="image/*" data-admin-field="imageFile" />
+                    <input type="url" placeholder="Image URL" data-admin-field="imageUrl" />
+                  </div>
+                </div>
+              </label>
               <label class="admin-field">
                 <span>SKU</span>
-                <input type="text" value="PJ-002" data-admin-field="sku" />
+                <output class="admin-field__output" data-admin-field="skuDisplay">Auto-generated</output>
               </label>
               <label class="admin-field">
                 <span>Category</span>
@@ -184,6 +202,30 @@
                   <option>Earrings</option>
                 </select>
               </label>
+              <label class="admin-field">
+                <span>Sizes</span>
+                <input type="text" value="S, M, L" placeholder="Comma separated" data-admin-field="sizes" />
+              </label>
+              <label class="admin-field">
+                <span>Colors</span>
+                <input type="text" value="Gold, Rose, Silver" placeholder="Comma separated" data-admin-field="colors" />
+              </label>
+              <div class="admin-field admin-field--full">
+                <span>Collections</span>
+                <input type="hidden" data-admin-field="collections" value="new-arrivals,best-sellers" />
+                <div class="admin-multiselect" data-admin-field="collectionsPicker">
+                  <button class="admin-multiselect__toggle" type="button" data-admin-collections-toggle aria-expanded="false">
+                    Select collections
+                  </button>
+                  <div class="admin-multiselect__menu" hidden>
+                    <label><input type="checkbox" value="new-arrivals" data-admin-collection-option /> New Arrivals</label>
+                    <label><input type="checkbox" value="mens-collection" data-admin-collection-option /> Men's Collection</label>
+                    <label><input type="checkbox" value="womens-collection" data-admin-collection-option /> Women's Collection</label>
+                    <label><input type="checkbox" value="gift-sets" data-admin-collection-option /> Gift Sets</label>
+                    <label><input type="checkbox" value="best-sellers" data-admin-collection-option /> Best Sellers</label>
+                  </div>
+                </div>
+              </div>
               <label class="admin-field">
                 <span>Price</span>
                 <input type="text" value="429.00" data-admin-field="price" />
@@ -196,16 +238,68 @@
                 <span>Description</span>
                 <textarea rows="4" data-admin-field="description">A polished ring with a luminous finish and a timeless silhouette.</textarea>
               </label>
+              <div class="admin-field admin-field--full">
+                <span>Why You’ll Love It</span>
+                <select data-admin-field="benefitPrimaryPreset">
+                  <option value="">Pick a preset</option>
+                  <option value="everyday">Everyday shine</option>
+                  <option value="gift-ready">Gift-ready polish</option>
+                  <option value="stackable">Stackable statement</option>
+                  <option value="minimal-luxury">Minimal luxury</option>
+                </select>
+                <textarea rows="3" data-admin-field="benefitPrimaryText" placeholder="Write the first benefit card copy"></textarea>
+              </div>
+              <div class="admin-field admin-field--full">
+                <span>Perfect For</span>
+                <select data-admin-field="benefitSecondaryPreset">
+                  <option value="">Pick a preset</option>
+                  <option value="daily-wear">Daily wear</option>
+                  <option value="gifting">Gift-giving moments</option>
+                  <option value="special-occasion">Special occasions</option>
+                  <option value="layering">Layered looks</option>
+                </select>
+                <textarea rows="3" data-admin-field="benefitSecondaryText" placeholder="Write the second benefit card copy"></textarea>
+              </div>
               <div class="admin-form__actions">
                 <button class="button button--ghost" type="button" data-admin-action="duplicate">Duplicate Product</button>
                 <button class="button button--dark" type="button" data-admin-action="update">Update Item</button>
+                <button class="button button--ghost button--danger" type="button" data-admin-action="delete">Delete Product</button>
               </div>
             </form>
           </section>
         </div>
 
         <aside class="admin-sidebar">
-          <section class="admin-card">
+          <section class="admin-card" id="orders">
+            <div class="admin-card__heading">
+              <div>
+                <p class="eyebrow">Orders</p>
+                <h3>Pending and recent orders.</h3>
+              </div>
+              <div class="admin-card__meta" data-admin-orders-meta>Loading...</div>
+            </div>
+
+            <div class="admin-order-stats">
+              <article>
+                <span>Pending</span>
+                <strong data-admin-order-stat="pending">00</strong>
+              </article>
+              <article>
+                <span>Paid</span>
+                <strong data-admin-order-stat="paid">00</strong>
+              </article>
+              <article>
+                <span>Revenue</span>
+                <strong data-admin-order-stat="revenue">0.00</strong>
+              </article>
+            </div>
+
+            <ul class="admin-order-list" data-admin-orders-list>
+              <li class="admin-order-list__empty">Loading orders…</li>
+            </ul>
+          </section>
+
+          <section class="admin-card" id="alerts">
             <p class="eyebrow">Alerts</p>
             <h3>Needs attention.</h3>
             <ul class="admin-list">
@@ -229,29 +323,13 @@
             <h3>Store operations.</h3>
             <div class="admin-ops">
               <button class="button button--ghost" type="button" data-admin-action="add">Add Product</button>
-              <button class="button button--ghost" type="button" data-admin-action="archive">Archive Item</button>
+              <button class="button button--ghost" type="button" data-admin-action="delete">Delete Selected</button>
               <button class="button button--ghost" type="button" data-admin-action="export">Export CSV</button>
             </div>
           </section>
         </aside>
       </section>
     </main>
-
-      <section class="page-contact">
-        <div>
-          <p class="eyebrow">Contact</p>
-          <h2>Need help with an order?</h2>
-          <p>Reach PeaceJewel for sizing help, order updates, gifting questions, or store support.</p>
-        </div>
-        <a class="button button--dark" href="mailto:hello@peacejewel.com">hello@peacejewel.com</a>
-      </section>
-
-      <footer class="site-footer" id="footer">
-        <div><h3>Shop</h3><ul><li>Best Sellers</li><li>New Drops</li><li>Gift Sets</li><li>Sale Picks</li></ul></div>
-        <div><h3>Support</h3><ul><li>Shipping</li><li>Returns</li><li>Size Guide</li><li>FAQs</li></ul></div>
-        <div><h3>Stay Connected</h3><p>Follow PeaceJewel for fresh offers, new arrivals, and limited-time deals you won’t want to miss.</p><div class="footer-social"><svg viewBox="0 0 24 24"><path d="M20.5 7.2c-.6.3-1.2.5-1.9.6.7-.4 1.2-1 1.5-1.8-.7.4-1.4.7-2.2.9a3.3 3.3 0 0 0-5.7 3c-2.7-.1-5.1-1.5-6.7-3.6-.9 1.6-.4 3.5 1 4.5-.5 0-1-.1-1.5-.4 0 1.9 1.3 3.5 3.1 3.9-.5.1-1 .1-1.6 0 .5 1.5 2 2.7 3.8 2.8a6.6 6.6 0 0 1-4.9 1.4 9.3 9.3 0 0 0 5 1.5c6 0 9.3-5 9.3-9.3v-.4c.7-.5 1.3-1.1 1.8-1.8z"/></svg><svg viewBox="0 0 24 24"><path d="M11 3h3v4h3v3h-3v4.9c0 1.1.5 1.6 1.8 1.6h1.4V19c-.6.3-1.8.6-3 .6-2.5 0-3.7-1.3-3.7-3.5V10H8V7.2c2-.2 3-.9 3-4.2z"/></svg><svg viewBox="0 0 24 24"><path d="M6.5 8.6H3.8V19h2.7V8.6zM5.2 4.2a1.6 1.6 0 1 0 0 3.2 1.6 1.6 0 0 0 0-3.2zM20.2 19h-2.7v-5.4c0-1.3 0-3-1.9-3s-2.2 1.4-2.2 2.8V19h-2.7V8.6h2.6v1.4h0c.4-.8 1.5-1.6 3.2-1.6 3.5 0 4.1 2.3 4.1 5.2V19z"/></svg></div></div>
-      </footer>
-      <div class="copyright">Copyright 2026 - PeaceJewel.com All rights reserved</div>
     <script src="/menu.js"></script>
     <script src="/store.js"></script>
   </body>

@@ -1,0 +1,134 @@
+[
+  {
+    "id": "PJ-006",
+    "sku": "PJ-NEW--43F9",
+    "slug": "new-product",
+    "name": "New Product",
+    "category": "Rings",
+    "description": "Fresh inventory item ready for merchandising.",
+    "imageUrl": "/assets/Vector.png",
+    "priceCents": 29900,
+    "stock": 1,
+    "status": "Low Stock",
+    "active": true,
+    "sizes": [
+      "S",
+      "M",
+      "L"
+    ],
+    "colors": [
+      "Gold"
+    ],
+    "collections": []
+  },
+  {
+    "id": "PJ-005",
+    "sku": "PJ-WEED-B75C",
+    "slug": "weeding-ring",
+    "name": "Weeding Ring",
+    "category": "Rings",
+    "description": "Fresh inventory item ready for merchandising.",
+    "imageUrl": "/assets/Vector.png",
+    "priceCents": 50000,
+    "stock": 10,
+    "status": "In Stock",
+    "active": true,
+    "sizes": [
+      "S",
+      "M",
+      "L"
+    ],
+    "colors": [
+      "Gold"
+    ],
+    "collections": []
+  },
+  {
+    "id": "PJ-001",
+    "sku": "PJ-CLAS-4D3B",
+    "slug": "classic-gold-ring",
+    "name": "Classic Gold Ring2",
+    "category": "Rings",
+    "description": "A polished everyday ring with premium shine and a clean finish.",
+    "imageUrl": "/assets/Vector.png",
+    "priceCents": 54200,
+    "stock": 18,
+    "status": "In Stock",
+    "active": true,
+    "sizes": [
+      "S",
+      "M"
+    ],
+    "colors": [
+      "Gold",
+      "Black"
+    ],
+    "collections": []
+  },
+  {
+    "id": "PJ-002",
+    "sku": "PJ-DIAM-6CCD",
+    "slug": "diamond-accent-ring",
+    "name": "Diamond Accent Ring",
+    "category": "rings",
+    "description": "A luminous statement ring made for gifting and special moments.",
+    "imageUrl": "/assets/Vector(1).png",
+    "priceCents": 42900,
+    "stock": 4,
+    "status": "Low Stock",
+    "active": true,
+    "sizes": [
+      "S",
+      "M",
+      "L"
+    ],
+    "colors": [
+      "Gold"
+    ],
+    "collections": []
+  },
+  {
+    "id": "PJ-003",
+    "sku": "PJ-WOVE-7197",
+    "slug": "woven-chain-bracelet",
+    "name": "Woven Chain Bracelet",
+    "category": "bracelets",
+    "description": "A textured woven bracelet with a stronger, modern silhouette.",
+    "imageUrl": "/assets/Vector(2).png",
+    "priceCents": 54929,
+    "stock": 11,
+    "status": "In Stock",
+    "active": true,
+    "sizes": [
+      "S",
+      "M",
+      "L"
+    ],
+    "colors": [
+      "Gold"
+    ],
+    "collections": []
+  },
+  {
+    "id": "PJ-004",
+    "sku": "PJ-BLAC-8923",
+    "slug": "black-coral-ring",
+    "name": "Black Coral Ring",
+    "category": "rings",
+    "description": "A bold ring with refined contrast and premium everyday appeal.",
+    "imageUrl": "/assets/Vector(3).png",
+    "priceCents": 32029,
+    "stock": 0,
+    "status": "Out of Stock",
+    "active": true,
+    "sizes": [
+      "S",
+      "M",
+      "L"
+    ],
+    "colors": [
+      "Gold"
+    ],
+    "collections": []
+  }
+]

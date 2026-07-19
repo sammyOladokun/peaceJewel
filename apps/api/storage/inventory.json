@@ -1,0 +1,171 @@
+[
+  {
+    "id": "PJ-MRRR2V5S6CY8",
+    "sku": "PJ-NEWP-WXW5",
+    "slug": "terent-white-diamond",
+    "name": "Terent White Diamond",
+    "category": "Rings",
+    "description": "New Diamond Custom Ring made from white Diamond made to be rocked with different outfit no matter the occassion.",
+    "imageUrl": "/assets/Vector.png",
+    "priceCents": 323200,
+    "stock": 32,
+    "status": "In Stock",
+    "active": true,
+    "sizes": [
+      "S"
+    ],
+    "colors": [
+      "Gold"
+    ],
+    "collections": [
+      "new-arrivals",
+      "womens-collection",
+      "gift-sets"
+    ],
+    "benefitPrimaryText": "",
+    "benefitSecondaryText": ""
+  },
+  {
+    "id": "PJ-MRRNKPBSHDWM",
+    "sku": "PJ-NEWP-0JHR",
+    "slug": "new-product",
+    "name": "India Diamond",
+    "category": "Rings",
+    "description": "Fresh inventory item ready for merchandising.",
+    "imageUrl": "/assets/Vector.png",
+    "priceCents": 34500,
+    "stock": 1,
+    "status": "Low Stock",
+    "active": true,
+    "sizes": [
+      "S",
+      "M",
+      "L"
+    ],
+    "colors": [
+      "Gold"
+    ],
+    "collections": [
+      "new-arrivals",
+      "mens-collection",
+      "womens-collection"
+    ],
+    "benefitPrimaryText": "",
+    "benefitSecondaryText": ""
+  },
+  {
+    "id": "PJ-001",
+    "sku": "PJ-RNG-001",
+    "slug": "classic-gold-ring",
+    "name": "Classic Gold Ring",
+    "category": "Rings",
+    "description": "A polished everyday ring with premium shine and a clean finish.",
+    "imageUrl": "/assets/Vector.png",
+    "priceCents": 34900,
+    "stock": 18,
+    "status": "In Stock",
+    "active": true,
+    "sizes": [
+      "S",
+      "M",
+      "L"
+    ],
+    "colors": [
+      "Gold"
+    ],
+    "collections": [
+      "new-arrivals",
+      "womens-collection",
+      "best-sellers"
+    ],
+    "benefitPrimaryText": "",
+    "benefitSecondaryText": ""
+  },
+  {
+    "id": "PJ-002",
+    "sku": "PJ-RNG-002",
+    "slug": "diamond-accent-ring",
+    "name": "Diamond Accent Ring",
+    "category": "Rings",
+    "description": "A luminous statement ring made for gifting and special moments.",
+    "imageUrl": "/assets/Vector(1).png",
+    "priceCents": 42900,
+    "stock": 4,
+    "status": "Low Stock",
+    "active": true,
+    "sizes": [
+      "S",
+      "M",
+      "L"
+    ],
+    "colors": [
+      "Gold",
+      "Rose"
+    ],
+    "collections": [
+      "new-arrivals",
+      "womens-collection",
+      "gift-sets",
+      "best-sellers"
+    ],
+    "benefitPrimaryText": "",
+    "benefitSecondaryText": ""
+  },
+  {
+    "id": "PJ-003",
+    "sku": "PJ-BRC-001",
+    "slug": "woven-chain-bracelet",
+    "name": "Woven Chain Bracelet",
+    "category": "Bracelets",
+    "description": "A textured woven bracelet with a stronger, modern silhouette.",
+    "imageUrl": "/assets/Vector(2).png",
+    "priceCents": 54929,
+    "stock": 11,
+    "status": "In Stock",
+    "active": true,
+    "sizes": [
+      "S",
+      "M"
+    ],
+    "colors": [
+      "Gold",
+      "Black"
+    ],
+    "collections": [
+      "new-arrivals",
+      "mens-collection",
+      "best-sellers"
+    ],
+    "benefitPrimaryText": "A textured woven bracelet with a stronger, modern silhouette. that feels effortless to wear and easy to style every day.",
+    "benefitSecondaryText": "Perfect for daily wear, layering, and keeping your look polished without trying too hard."
+  },
+  {
+    "id": "PJ-004",
+    "sku": "PJ-RNG-003",
+    "slug": "black-coral-ring",
+    "name": "Black Coral Ring",
+    "category": "Rings",
+    "description": "A bold ring with refined contrast and premium everyday appeal.",
+    "imageUrl": "/assets/Vector(3).png",
+    "priceCents": 32029,
+    "stock": 0,
+    "status": "Out of Stock",
+    "active": true,
+    "sizes": [
+      "S",
+      "M",
+      "L"
+    ],
+    "colors": [
+      "Gold",
+      "Black"
+    ],
+    "collections": [
+      "new-arrivals",
+      "mens-collection",
+      "best-sellers"
+    ],
+    "benefitPrimaryText": "",
+    "benefitSecondaryText": ""
+  }
+]
