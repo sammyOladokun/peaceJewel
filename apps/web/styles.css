@@ -1081,7 +1081,7 @@ button, input { font: inherit; }
 
 .admin-table__row {
   display: grid;
-  grid-template-columns: minmax(0, 2.1fr) auto auto auto;
+  grid-template-columns: minmax(0, 2.1fr) auto auto auto auto;
   gap: 1rem;
   align-items: center;
   padding-bottom: .85rem;
@@ -1125,6 +1125,11 @@ button, input { font: inherit; }
   color: var(--muted);
   font-size: .84rem;
   margin-top: .2rem;
+}
+
+.admin-row-action {
+  justify-self: end;
+  white-space: nowrap;
 }
 
 .admin-badge {
@@ -1218,6 +1223,11 @@ button, input { font: inherit; }
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.22);
   padding: .75rem;
+}
+
+.admin-image-picker__preview:not([src]),
+.admin-image-picker__preview[src=""] {
+  visibility: hidden;
 }
 
 .admin-image-picker__controls {
@@ -1367,6 +1377,17 @@ button, input { font: inherit; }
   gap: .75rem;
   flex-wrap: wrap;
   padding-top: .25rem;
+}
+
+.admin-editor {
+  max-width: 1220px;
+  margin: 0 auto;
+  padding: 0 1.5rem 4rem;
+}
+
+.admin-editor__card {
+  max-width: 960px;
+  margin: 0 auto;
 }
 
 .admin-list {

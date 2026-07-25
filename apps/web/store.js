@@ -227,7 +227,7 @@
     }
 
     const adminRow = event.target.closest(".admin-table__row[data-admin-id]");
-    if (adminRow && !event.target.closest("[data-stock-action]")) {
+    if (adminRow && !event.target.closest("[data-stock-action]") && !event.target.closest(".admin-row-action")) {
       event.preventDefault();
       selectInventoryItem(adminRow.dataset.adminId);
     }
@@ -299,7 +299,7 @@
     const reader = new FileReader();
     reader.onload = () => {
       pendingImageUpload = {
-        itemId: state.selectedInventoryId || state.adminDraft?.id || null,
+        itemId: form?.dataset.adminId || state.selectedInventoryId || state.adminDraft?.id || null,
         fileName: file.name,
         mimeType: file.type || "image/png",
         dataUrl: String(reader.result || "")
@@ -641,6 +641,7 @@
           <span>Status</span>
           <span>Stock</span>
           <span>Price</span>
+          <span>Edit</span>
         </div>`,
         ...state.inventory.map(renderAdminRow)
       ].join("");
@@ -747,6 +748,7 @@
         <button type="button" data-stock-action="increase" aria-label="Increase stock">+</button>
       </div>
       <strong>${formatMoney(item.priceCents)}</strong>
+      <a class="button button--ghost admin-row-action" href="/admin/edit?id=${encodeURIComponent(item.id)}">Edit</a>
     </div>`;
   }
 
@@ -1144,23 +1146,26 @@
 
   async function saveSelectedInventoryItem() {
     const form = document.querySelector(".admin-form");
-    const existingItem = getSelectedInventoryItem();
     if (!form) return;
 
     const fields = getAdminFields(form);
-    const draftMode = Boolean(state.adminDraft);
-    const baseItem = structuredClone(state.adminDraft || existingItem || createInventorySeed());
-    const item = await buildInventoryItemFromFields(fields, form, baseItem);
+    const editorMode = form.dataset.adminMode || "edit";
+    const editorId = form.dataset.adminId || state.selectedInventoryId || "";
+    const existingItem = state.inventory.find((entry) => entry.id === editorId) || null;
+    const baseItem = editorMode === "add"
+      ? createInventorySeed(editorId || undefined)
+      : structuredClone(existingItem || createInventorySeed(editorId || undefined));
+    const item = await buildInventoryItemFromFields(fields, form, baseItem, editorMode);
 
-    if (draftMode) {
+    if (editorMode === "add") {
       state.inventory.unshift(item);
       state.selectedInventoryId = item.id;
-      state.adminDraft = null;
       pendingImageUpload = null;
       persistInventory();
       renderAdminPage();
       renderStorefrontPages();
       showToast("Inventory item added.");
+      window.location.assign("/admin");
       return;
     }
 
@@ -1174,15 +1179,15 @@
     showToast("Inventory item updated.");
   }
 
-  async function resolveAdminImage(fields, item) {
+  async function resolveAdminImage(fields, item, editorMode = "edit") {
     const fallbackUrl = fields.imageUrl?.value.trim() || item.image || item.imageUrl || "";
 
     if (!pendingImageUpload || pendingImageUpload.itemId !== item.id) {
-      return fallbackUrl;
+      return editorMode === "add" ? fallbackUrl || "" : fallbackUrl;
     }
 
     const uploaded = await uploadAdminImage(pendingImageUpload).catch(() => null);
-    return uploaded?.url || pendingImageUpload.dataUrl || fallbackUrl;
+    return uploaded?.url || pendingImageUpload.dataUrl || fallbackUrl || "";
   }
 
   async function uploadAdminImage(upload) {
@@ -1253,11 +1258,7 @@
   }
 
   function addInventoryItem() {
-    state.adminDraft = createInventorySeed();
-    state.selectedInventoryId = null;
-    pendingImageUpload = null;
-    renderAdminPage();
-    showToast("Ready to add product.");
+    window.location.assign("/admin/add");
   }
 
   async function deleteSelectedInventoryItem() {
@@ -1291,7 +1292,7 @@
   function selectInventoryItem(itemId) {
     state.adminDraft = null;
     state.selectedInventoryId = itemId;
-    renderAdminPage();
+    window.location.assign(`/admin/edit?id=${encodeURIComponent(itemId)}`);
   }
 
   function syncSelectedAdminRow() {
@@ -1309,7 +1310,7 @@
     return state.adminDraft || getSelectedInventoryItem() || createInventorySeed();
   }
 
-  async function buildInventoryItemFromFields(fields, form, item) {
+  async function buildInventoryItemFromFields(fields, form, item, editorMode = "edit") {
     const nextItem = structuredClone(item);
     nextItem.name = fields.name?.value.trim() || nextItem.name;
     nextItem.sku = nextItem.sku || generateSku(nextItem.name);
@@ -1323,14 +1324,14 @@
     nextItem.stock = clampStock(Number(fields.stock?.value || nextItem.stock));
     nextItem.status = resolveStatus(nextItem.stock);
     nextItem.description = fields.description?.value.trim() || nextItem.description;
-    nextItem.image = nextItem.imageUrl = await resolveAdminImage(fields, nextItem);
+    nextItem.image = nextItem.imageUrl = await resolveAdminImage(fields, nextItem, editorMode);
     return nextItem;
   }
 
-  function createInventorySeed() {
-    const seedId = `PJ-${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+  function createInventorySeed(seedId) {
+    const generatedId = seedId || `PJ-${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
     return {
-      id: seedId,
+      id: generatedId,
       sku: generateSku("New Product"),
       name: "New Product",
       category: "Rings",

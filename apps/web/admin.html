@@ -47,7 +47,7 @@
         </div>
         <div class="admin-toolbar__actions">
           <a class="button button--ghost" href="/catalog">View Store</a>
-          <button class="button button--dark" type="button" data-admin-action="save">Save Changes</button>
+          <a class="button button--dark" href="/admin/add">Add Product</a>
         </div>
       </section>
 
@@ -170,102 +170,17 @@
           <section class="admin-card" id="settings">
             <div class="admin-card__heading">
               <div>
-                <p class="eyebrow">Quick Update</p>
-                <h3>Edit an item fast.</h3>
+                <p class="eyebrow">Product Editor</p>
+                <h3>Open a dedicated editor.</h3>
               </div>
             </div>
 
-            <form class="admin-form">
-              <label class="admin-field admin-field--full">
-                <span>Product Name</span>
-                <input type="text" value="Diamond Accent Ring" data-admin-field="name" />
-              </label>
-              <label class="admin-field admin-field--full">
-                <span>Product Image</span>
-                <div class="admin-image-picker">
-                  <img class="admin-image-picker__preview" alt="Selected product preview" data-admin-preview="image" />
-                  <div class="admin-image-picker__controls">
-                    <input type="file" accept="image/*" data-admin-field="imageFile" />
-                    <input type="url" placeholder="Image URL" data-admin-field="imageUrl" />
-                  </div>
-                </div>
-              </label>
-              <label class="admin-field">
-                <span>SKU</span>
-                <output class="admin-field__output" data-admin-field="skuDisplay">Auto-generated</output>
-              </label>
-              <label class="admin-field">
-                <span>Category</span>
-                <select data-admin-field="category">
-                  <option>Rings</option>
-                  <option>Bracelets</option>
-                  <option>Earrings</option>
-                </select>
-              </label>
-              <label class="admin-field">
-                <span>Sizes</span>
-                <input type="text" value="S, M, L" placeholder="Comma separated" data-admin-field="sizes" />
-              </label>
-              <label class="admin-field">
-                <span>Colors</span>
-                <input type="text" value="Gold, Rose, Silver" placeholder="Comma separated" data-admin-field="colors" />
-              </label>
-              <div class="admin-field admin-field--full">
-                <span>Collections</span>
-                <input type="hidden" data-admin-field="collections" value="new-arrivals,best-sellers" />
-                <div class="admin-multiselect" data-admin-field="collectionsPicker">
-                  <button class="admin-multiselect__toggle" type="button" data-admin-collections-toggle aria-expanded="false">
-                    Select collections
-                  </button>
-                  <div class="admin-multiselect__menu" hidden>
-                    <label><input type="checkbox" value="new-arrivals" data-admin-collection-option /> New Arrivals</label>
-                    <label><input type="checkbox" value="mens-collection" data-admin-collection-option /> Men's Collection</label>
-                    <label><input type="checkbox" value="womens-collection" data-admin-collection-option /> Women's Collection</label>
-                    <label><input type="checkbox" value="gift-sets" data-admin-collection-option /> Gift Sets</label>
-                    <label><input type="checkbox" value="best-sellers" data-admin-collection-option /> Best Sellers</label>
-                  </div>
-                </div>
-              </div>
-              <label class="admin-field">
-                <span>Price</span>
-                <input type="text" value="429.00" data-admin-field="price" />
-              </label>
-              <label class="admin-field">
-                <span>Stock</span>
-                <input type="number" value="4" data-admin-field="stock" />
-              </label>
-              <label class="admin-field admin-field--full">
-                <span>Description</span>
-                <textarea rows="4" data-admin-field="description">A polished ring with a luminous finish and a timeless silhouette.</textarea>
-              </label>
-              <div class="admin-field admin-field--full">
-                <span>Why You’ll Love It</span>
-                <select data-admin-field="benefitPrimaryPreset">
-                  <option value="">Pick a preset</option>
-                  <option value="everyday">Everyday shine</option>
-                  <option value="gift-ready">Gift-ready polish</option>
-                  <option value="stackable">Stackable statement</option>
-                  <option value="minimal-luxury">Minimal luxury</option>
-                </select>
-                <textarea rows="3" data-admin-field="benefitPrimaryText" placeholder="Write the first benefit card copy"></textarea>
-              </div>
-              <div class="admin-field admin-field--full">
-                <span>Perfect For</span>
-                <select data-admin-field="benefitSecondaryPreset">
-                  <option value="">Pick a preset</option>
-                  <option value="daily-wear">Daily wear</option>
-                  <option value="gifting">Gift-giving moments</option>
-                  <option value="special-occasion">Special occasions</option>
-                  <option value="layering">Layered looks</option>
-                </select>
-                <textarea rows="3" data-admin-field="benefitSecondaryText" placeholder="Write the second benefit card copy"></textarea>
-              </div>
-              <div class="admin-form__actions">
-                <button class="button button--ghost" type="button" data-admin-action="duplicate">Duplicate Product</button>
-                <button class="button button--dark" type="button" data-admin-action="update">Update Item</button>
-                <button class="button button--ghost button--danger" type="button" data-admin-action="delete">Delete Product</button>
-              </div>
-            </form>
+            <p class="admin-toolbar__note">Add new items on a dedicated page, then use the edit link beside any product in the inventory table to update an existing item.</p>
+
+            <div class="admin-ops">
+              <a class="button button--dark" href="/admin/add">Add Product</a>
+              <span class="admin-card__meta">Pick a product from the inventory table to edit it.</span>
+            </div>
           </section>
         </div>
 
@@ -322,7 +237,7 @@
             <p class="eyebrow">Catalog Controls</p>
             <h3>Store operations.</h3>
             <div class="admin-ops">
-              <button class="button button--ghost" type="button" data-admin-action="add">Add Product</button>
+              <a class="button button--ghost" href="/admin/add">Add Product</a>
               <button class="button button--ghost" type="button" data-admin-action="delete">Delete Selected</button>
               <button class="button button--ghost" type="button" data-admin-action="export">Export CSV</button>
             </div>

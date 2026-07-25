@@ -1,5 +1,33 @@
 [
   {
+    "id": "PJ-MS0NCAVZ-0DCB",
+    "sku": "PJ-NEWP-1YHC",
+    "slug": "new-product",
+    "name": "New Product",
+    "category": "Earrings",
+    "description": "Fresh inventory item ready for merchandising.",
+    "imageUrl": "http://localhost:4000/uploads/1785000868109-7-1.png",
+    "priceCents": 676800,
+    "stock": 45,
+    "status": "In Stock",
+    "active": true,
+    "sizes": [
+      "S",
+      "M",
+      "L"
+    ],
+    "colors": [
+      "Gold",
+      "Silver"
+    ],
+    "collections": [
+      "new-arrivals",
+      "mens-collection"
+    ],
+    "benefitPrimaryText": "Polished enough for every day, with a clean finish that feels easy to wear from morning to night.",
+    "benefitSecondaryText": "Perfect for everyday styling, work looks, and repeat wear without losing its polish."
+  },
+  {
     "id": "PJ-MS0M5KC3F8A8",
     "sku": "PJ-NEWP-HOBT",
     "slug": "dey-play",

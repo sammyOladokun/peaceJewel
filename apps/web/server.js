@@ -127,6 +127,30 @@ const server = http.createServer((request, response) => {
     return;
   }
 
+  if (requestPath === "/admin/add" || requestPath === "/admin/edit") {
+    if (!isAdminAuthenticated(request.headers.cookie)) {
+      response.writeHead(302, { Location: "/admin-login" });
+      response.end();
+      return;
+    }
+
+    const url = new URL(request.url, `http://${request.headers.host}`);
+    const mode = requestPath === "/admin/add" ? "add" : "edit";
+    const item = mode === "add"
+      ? createAdminEditorSeed()
+      : resolveAdminEditorItem(url, loadInventorySnapshot());
+
+    if (mode === "edit" && !item) {
+      response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
+      response.end("Product not found");
+      return;
+    }
+
+    response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+    response.end(renderAdminEditorPage(mode, item));
+    return;
+  }
+
   if (requestPath === "/admin-login") {
     if (request.method === "POST") {
       let body = "";
@@ -253,6 +277,223 @@ function renderAdminLoginPage(message) {
     '<p class="admin-login__message">Use the admin key to enter the inventory dashboard.</p>',
     `<p class="admin-login__message admin-login__message--error">${message}</p>`
   );
+}
+
+function renderAdminEditorPage(mode, item) {
+  const isAddMode = mode === "add";
+  const selectedCollections = normalizeList(item.collections, []);
+  const selectedSizes = normalizeList(item.sizes, []);
+  const selectedColors = normalizeList(item.colors, []);
+  const selectedCategory = String(item.category || "Rings");
+  const benefitPrimary = String(item.benefitPrimaryText || "").trim() || getBenefitCards(item).primary;
+  const benefitSecondary = String(item.benefitSecondaryText || "").trim() || getBenefitCards(item).secondary;
+  const title = isAddMode ? "Add Product" : "Edit Product";
+  const heading = isAddMode ? "Add a new item." : "Edit this item.";
+  const note = isAddMode
+    ? "Create a fresh inventory record, upload the product image, and save it to Neon."
+    : "Adjust product details, prices, stock, and imagery for this inventory item.";
+
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PeaceJewel Admin — ${escapeHtml(title)}</title>
+    <meta name="description" content="PeaceJewel admin product form." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="site-header__inner">
+        <a class="site-brand" href="/">PeaceJewel</a>
+        <nav class="site-nav" id="site-nav">
+          <a href="/admin">Dashboard</a>
+          <a href="/admin/add">Add Product</a>
+          <a href="/catalog">View Store</a>
+        </nav>
+        <div class="site-actions" aria-label="Utilities">
+          <button class="icon-button site-menu-button" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-nav">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="landing-shell shop-shell admin-shell">
+      <section class="shop-toolbar admin-toolbar">
+        <div>
+          <p class="eyebrow">Admin Inventory</p>
+          <h2>${escapeHtml(heading)}</h2>
+          <p class="admin-toolbar__note">${escapeHtml(note)}</p>
+        </div>
+        <div class="admin-toolbar__actions">
+          <a class="button button--ghost" href="/admin">Back to dashboard</a>
+          <button class="button button--dark" type="button" data-admin-action="update">${isAddMode ? "Add Item" : "Update Item"}</button>
+        </div>
+      </section>
+
+      <section class="admin-editor">
+        <section class="admin-card admin-editor__card">
+          <div class="admin-card__heading">
+            <div>
+              <p class="eyebrow">${isAddMode ? "New Product" : "Edit Product"}</p>
+              <h3>${escapeHtml(item.name || "Untitled Product")}</h3>
+            </div>
+            <div class="admin-card__meta">${isAddMode ? "Blank draft" : `SKU ${escapeHtml(item.sku || generateSku(item.name || "Product"))}`}</div>
+          </div>
+
+          <form class="admin-form" data-admin-mode="${isAddMode ? "add" : "edit"}" data-admin-id="${escapeHtml(item.id || "")}">
+            <label class="admin-field admin-field--full">
+              <span>Product Name</span>
+              <input type="text" value="${escapeHtml(isAddMode ? "" : item.name || "")}" placeholder="Enter product name" data-admin-field="name" />
+            </label>
+            <label class="admin-field admin-field--full">
+              <span>Product Image</span>
+              <div class="admin-image-picker">
+                <img class="admin-image-picker__preview" alt="Selected product preview" data-admin-preview="image" />
+                <div class="admin-image-picker__controls">
+                  <input type="file" accept="image/*" data-admin-field="imageFile" />
+                  <input type="url" placeholder="Image URL" value="${escapeHtml(isAddMode ? "" : item.image || item.imageUrl || "")}" data-admin-field="imageUrl" />
+                </div>
+              </div>
+            </label>
+            <label class="admin-field">
+              <span>SKU</span>
+              <output class="admin-field__output" data-admin-field="skuDisplay">${escapeHtml(isAddMode ? "Auto-generated" : item.sku || "Auto-generated")}</output>
+            </label>
+            <label class="admin-field">
+              <span>Category</span>
+              <select data-admin-field="category">
+                ${["Rings", "Bracelets", "Earrings"].map((category) => `<option${selectedCategory === category ? " selected" : ""}>${escapeHtml(category)}</option>`).join("")}
+              </select>
+            </label>
+            <label class="admin-field">
+              <span>Sizes</span>
+              <input type="text" value="${escapeHtml(isAddMode ? "" : selectedSizes.join(", "))}" placeholder="Comma separated" data-admin-field="sizes" />
+            </label>
+            <label class="admin-field">
+              <span>Colors</span>
+              <input type="text" value="${escapeHtml(isAddMode ? "" : selectedColors.join(", "))}" placeholder="Comma separated" data-admin-field="colors" />
+            </label>
+            <div class="admin-field admin-field--full">
+              <span>Collections</span>
+              <input type="hidden" data-admin-field="collections" value="${escapeHtml(selectedCollections.join(","))}" />
+              <div class="admin-multiselect" data-admin-field="collectionsPicker">
+                <button class="admin-multiselect__toggle" type="button" data-admin-collections-toggle aria-expanded="false">
+                  Select collections
+                </button>
+                <div class="admin-multiselect__menu" hidden>
+                  ${renderAdminCollectionOptions(selectedCollections)}
+                </div>
+              </div>
+            </div>
+            <label class="admin-field">
+              <span>Price</span>
+              <input type="text" value="${escapeHtml(isAddMode ? "" : formatMoney(item.priceCents || 0).replace("₦", ""))}" placeholder="0.00" data-admin-field="price" />
+            </label>
+            <label class="admin-field">
+              <span>Stock</span>
+              <input type="number" value="${escapeHtml(isAddMode ? "" : String(item.stock ?? 0))}" placeholder="0" data-admin-field="stock" />
+            </label>
+            <label class="admin-field admin-field--full">
+              <span>Description</span>
+              <textarea rows="4" placeholder="Write the product description" data-admin-field="description">${escapeHtml(isAddMode ? "" : item.description || "")}</textarea>
+            </label>
+            <div class="admin-field admin-field--full">
+              <span>Why You’ll Love It</span>
+              <select data-admin-field="benefitPrimaryPreset">
+                <option value="">Pick a preset</option>
+                <option value="everyday"${findBenefitPresetValue("primary", benefitPrimary) === "everyday" ? " selected" : ""}>Everyday shine</option>
+                <option value="gift-ready"${findBenefitPresetValue("primary", benefitPrimary) === "gift-ready" ? " selected" : ""}>Gift-ready polish</option>
+                <option value="stackable"${findBenefitPresetValue("primary", benefitPrimary) === "stackable" ? " selected" : ""}>Stackable statement</option>
+                <option value="minimal-luxury"${findBenefitPresetValue("primary", benefitPrimary) === "minimal-luxury" ? " selected" : ""}>Minimal luxury</option>
+              </select>
+              <textarea rows="3" placeholder="Write the first benefit card copy" data-admin-field="benefitPrimaryText">${escapeHtml(isAddMode ? "" : benefitPrimary)}</textarea>
+            </div>
+            <div class="admin-field admin-field--full">
+              <span>Perfect For</span>
+              <select data-admin-field="benefitSecondaryPreset">
+                <option value="">Pick a preset</option>
+                <option value="daily-wear"${findBenefitPresetValue("secondary", benefitSecondary) === "daily-wear" ? " selected" : ""}>Daily wear</option>
+                <option value="gifting"${findBenefitPresetValue("secondary", benefitSecondary) === "gifting" ? " selected" : ""}>Gift-giving moments</option>
+                <option value="special-occasion"${findBenefitPresetValue("secondary", benefitSecondary) === "special-occasion" ? " selected" : ""}>Special occasions</option>
+                <option value="layering"${findBenefitPresetValue("secondary", benefitSecondary) === "layering" ? " selected" : ""}>Layered looks</option>
+              </select>
+              <textarea rows="3" placeholder="Write the second benefit card copy" data-admin-field="benefitSecondaryText">${escapeHtml(isAddMode ? "" : benefitSecondary)}</textarea>
+            </div>
+            <div class="admin-form__actions">
+              <a class="button button--ghost" href="/admin">Cancel</a>
+              <button class="button button--dark" type="button" data-admin-action="update">${isAddMode ? "Add Item" : "Update Item"}</button>
+            </div>
+          </form>
+        </section>
+      </section>
+    </main>
+    <script>window.__PEACEJEWEL_API_BASE__ = ${JSON.stringify((process.env.NEXT_PUBLIC_API_URL || process.env.API_BASE_URL || "").replace(/\/+$/, ""))};</script>
+    <script src="/menu.js"></script>
+    <script src="/store.js"></script>
+  </body>
+</html>`;
+}
+
+function renderAdminCollectionOptions(selectedCollections) {
+  const options = [
+    ["new-arrivals", "New Arrivals"],
+    ["mens-collection", "Men's Collection"],
+    ["womens-collection", "Women's Collection"],
+    ["gift-sets", "Gift Sets"],
+    ["best-sellers", "Best Sellers"]
+  ];
+
+  return options.map(([value, label]) => `<label><input type="checkbox" value="${value}" data-admin-collection-option${selectedCollections.includes(value) ? " checked" : ""} /> ${label}</label>`).join("");
+}
+
+function findBenefitPresetValue(group, text) {
+  const normalized = String(text || "").trim();
+  const presets = {
+    primary: {
+      everyday: "Polished enough for every day, with a clean finish that feels easy to wear from morning to night.",
+      "gift-ready": "A gift-ready piece with an elevated look that feels thoughtful the moment it’s unwrapped.",
+      stackable: "Designed to stack beautifully with your existing pieces for a layered, premium finish.",
+      "minimal-luxury": "Minimal lines and a refined shine create a luxury feel without looking overdone."
+    },
+    secondary: {
+      "daily-wear": "Perfect for everyday styling, work looks, and repeat wear without losing its polish.",
+      gifting: "Perfect for birthdays, anniversaries, and those last-minute moments when you want something special.",
+      "special-occasion": "Perfect for celebrations, dinners, and moments where the details should feel a little more elevated.",
+      layering: "Perfect for layering with other rings, chains, or bracelets to create a richer look."
+    }
+  };
+
+  const entries = presets[group] || {};
+  return Object.entries(entries).find(([, value]) => value === normalized)?.[0] || "";
+}
+
+function resolveAdminEditorItem(url, inventory) {
+  const itemId = String(url.searchParams.get("id") || "").trim();
+  const slug = String(url.searchParams.get("slug") || "").trim();
+  return inventory.find((item) => (itemId && item.id === itemId) || (slug && item.slug === slug)) || null;
+}
+
+function createAdminEditorSeed() {
+  return {
+    id: `PJ-${Date.now().toString(36).toUpperCase()}-${crypto.randomBytes(2).toString("hex").toUpperCase()}`,
+    sku: "",
+    name: "",
+    category: "Rings",
+    description: "",
+    image: "",
+    priceCents: 0,
+    stock: 0,
+    sizes: [],
+    colors: [],
+    collections: [],
+    benefitPrimaryText: "",
+    benefitSecondaryText: ""
+  };
 }
 
 function wrapStorefrontPage(title, description, content) {
