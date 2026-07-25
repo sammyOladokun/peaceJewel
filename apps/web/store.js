@@ -74,6 +74,7 @@
     inventory: readJson(STORAGE_KEYS.inventory, []),
     orders: readJson(STORAGE_KEYS.orders, []),
     selectedInventoryId: null,
+    adminDraft: null,
     catalogSelections: {},
     activeCatalogSlug: ""
   };
@@ -298,7 +299,7 @@
     const reader = new FileReader();
     reader.onload = () => {
       pendingImageUpload = {
-        itemId: state.selectedInventoryId,
+        itemId: state.selectedInventoryId || state.adminDraft?.id || null,
         fileName: file.name,
         mimeType: file.type || "image/png",
         dataUrl: String(reader.result || "")
@@ -689,7 +690,8 @@
     }
 
     if (form) {
-      populateAdminForm(getSelectedInventoryItem());
+      populateAdminForm(getAdminFormItem());
+      updateAdminFormMode();
     }
 
     syncSelectedAdminRow();
@@ -1107,6 +1109,16 @@
     }
   }
 
+  function updateAdminFormMode() {
+    const form = document.querySelector(".admin-form");
+    if (!form) return;
+
+    const updateButton = form.querySelector('[data-admin-action="update"]');
+    if (updateButton) {
+      updateButton.textContent = state.adminDraft ? "Add Item" : "Update Item";
+    }
+  }
+
   function getAdminFields(form) {
     return {
       name: form.querySelector('[data-admin-field="name"]'),
@@ -1132,27 +1144,33 @@
 
   async function saveSelectedInventoryItem() {
     const form = document.querySelector(".admin-form");
-    const item = getSelectedInventoryItem();
-    if (!form || !item) return;
+    const existingItem = getSelectedInventoryItem();
+    if (!form) return;
 
     const fields = getAdminFields(form);
-    item.name = fields.name?.value.trim() || item.name;
-    item.sku = item.sku || generateSku(item.name);
-    item.category = fields.category?.value.trim() || item.category;
-    item.sizes = parseListField(fields.sizes?.value, item.sizes);
-    item.colors = parseListField(fields.colors?.value, item.colors);
-    item.collections = getSelectedCollections(form);
-    item.benefitPrimaryText = normalizeText(fields.benefitPrimaryText?.value) || item.benefitPrimaryText || getBenefitCards(item).primary;
-    item.benefitSecondaryText = normalizeText(fields.benefitSecondaryText?.value) || item.benefitSecondaryText || getBenefitCards(item).secondary;
-    item.priceCents = parseMoney(fields.price?.value || item.priceCents);
-    item.stock = clampStock(Number(fields.stock?.value || item.stock));
-    item.status = resolveStatus(item.stock);
-    item.description = fields.description?.value.trim() || item.description;
-    item.image = await resolveAdminImage(fields, item);
+    const draftMode = Boolean(state.adminDraft);
+    const baseItem = structuredClone(state.adminDraft || existingItem || createInventorySeed());
+    const item = await buildInventoryItemFromFields(fields, form, baseItem);
 
+    if (draftMode) {
+      state.inventory.unshift(item);
+      state.selectedInventoryId = item.id;
+      state.adminDraft = null;
+      pendingImageUpload = null;
+      persistInventory();
+      renderAdminPage();
+      renderStorefrontPages();
+      showToast("Inventory item added.");
+      return;
+    }
+
+    if (!existingItem) return;
+
+    Object.assign(existingItem, item);
     pendingImageUpload = null;
     persistInventory();
     renderAdminPage();
+    renderStorefrontPages();
     showToast("Inventory item updated.");
   }
 
@@ -1235,12 +1253,11 @@
   }
 
   function addInventoryItem() {
-    const seed = createInventorySeed();
-    state.inventory.unshift(seed);
-    state.selectedInventoryId = seed.id;
-    persistInventory();
+    state.adminDraft = createInventorySeed();
+    state.selectedInventoryId = null;
+    pendingImageUpload = null;
     renderAdminPage();
-    showToast("New product added.");
+    showToast("Ready to add product.");
   }
 
   async function deleteSelectedInventoryItem() {
@@ -1272,6 +1289,7 @@
   }
 
   function selectInventoryItem(itemId) {
+    state.adminDraft = null;
     state.selectedInventoryId = itemId;
     renderAdminPage();
   }
@@ -1287,6 +1305,28 @@
     return state.inventory.find((item) => item.id === state.selectedInventoryId) || state.inventory[0] || null;
   }
 
+  function getAdminFormItem() {
+    return state.adminDraft || getSelectedInventoryItem() || createInventorySeed();
+  }
+
+  async function buildInventoryItemFromFields(fields, form, item) {
+    const nextItem = structuredClone(item);
+    nextItem.name = fields.name?.value.trim() || nextItem.name;
+    nextItem.sku = nextItem.sku || generateSku(nextItem.name);
+    nextItem.category = fields.category?.value.trim() || nextItem.category;
+    nextItem.sizes = parseListField(fields.sizes?.value, nextItem.sizes);
+    nextItem.colors = parseListField(fields.colors?.value, nextItem.colors);
+    nextItem.collections = getSelectedCollections(form);
+    nextItem.benefitPrimaryText = normalizeText(fields.benefitPrimaryText?.value) || nextItem.benefitPrimaryText || getBenefitCards(nextItem).primary;
+    nextItem.benefitSecondaryText = normalizeText(fields.benefitSecondaryText?.value) || nextItem.benefitSecondaryText || getBenefitCards(nextItem).secondary;
+    nextItem.priceCents = parseMoney(fields.price?.value || nextItem.priceCents);
+    nextItem.stock = clampStock(Number(fields.stock?.value || nextItem.stock));
+    nextItem.status = resolveStatus(nextItem.stock);
+    nextItem.description = fields.description?.value.trim() || nextItem.description;
+    nextItem.image = nextItem.imageUrl = await resolveAdminImage(fields, nextItem);
+    return nextItem;
+  }
+
   function createInventorySeed() {
     const seedId = `PJ-${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
     return {
@@ -1298,7 +1338,7 @@
       stock: 1,
       priceCents: 29900,
       description: "Fresh inventory item ready for merchandising.",
-      image: "/assets/Vector.png",
+      image: "",
       sizes: ["S", "M", "L"],
       colors: ["Gold"],
       collections: ["new-arrivals"],

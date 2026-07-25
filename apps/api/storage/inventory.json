@@ -1,5 +1,31 @@
 [
   {
+    "id": "PJ-MS0M5KC3F8A8",
+    "sku": "PJ-NEWP-HOBT",
+    "slug": "dey-play",
+    "name": "Dey Play",
+    "category": "Rings",
+    "description": "Fresh inventory item ready for merchandising.",
+    "imageUrl": "http://localhost:4000/uploads/1784998769541-5-50.png",
+    "priceCents": 29900,
+    "stock": 1,
+    "status": "Low Stock",
+    "active": true,
+    "sizes": [
+      "S",
+      "M",
+      "L"
+    ],
+    "colors": [
+      "Gold"
+    ],
+    "collections": [
+      "new-arrivals"
+    ],
+    "benefitPrimaryText": "Polished enough for every day, with a clean finish that feels easy to wear from morning to night.",
+    "benefitSecondaryText": "Perfect for everyday styling, work looks, and repeat wear without losing its polish."
+  },
+  {
     "id": "PJ-MRRR2V5S6CY8",
     "sku": "PJ-NEWP-WXW5",
     "slug": "terent-white-diamond",
