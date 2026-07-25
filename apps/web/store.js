@@ -1,5 +1,5 @@
 (function () {
-  const API_BASE = `${window.location.protocol}//${window.location.hostname}:4000`;
+  const API_BASE = (window.__PEACEJEWEL_API_BASE__ || `${window.location.protocol}//${window.location.hostname}:4000`).replace(/\/+$/, "");
   const STORAGE_KEYS = {
     cart: "peacejewel.cart.v1",
     cartId: "peacejewel.cart.id.v1",
@@ -1098,7 +1098,12 @@
     const preview = form.querySelector('[data-admin-preview="image"]');
     if (preview) {
       const pendingForItem = pendingImageUpload && pendingImageUpload.itemId === item.id ? pendingImageUpload.dataUrl : null;
-      preview.src = pendingForItem || item.image || item.imageUrl || preview.src;
+      const nextPreview = pendingForItem || item.image || item.imageUrl || "";
+      if (nextPreview) {
+        preview.src = nextPreview;
+      } else {
+        preview.removeAttribute("src");
+      }
     }
   }
 
@@ -1180,7 +1185,7 @@
     const payload = await response.json();
     return {
       ...payload,
-      url: `${API_BASE}${payload.url}`
+      url: String(payload.url || "").startsWith("http") ? payload.url : `${API_BASE}${payload.url}`
     };
   }
 

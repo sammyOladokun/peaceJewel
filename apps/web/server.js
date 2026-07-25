@@ -20,6 +20,7 @@ const menuJs = fs.readFileSync(path.join(rootDir, "menu.js"), "utf8");
 const storeJs = fs.readFileSync(path.join(rootDir, "store.js"), "utf8");
 const adminKey = process.env.ADMIN_KEY || "peacejewel-admin";
 const adminSessionToken = crypto.randomBytes(24).toString("hex");
+const apiBaseUrl = (process.env.NEXT_PUBLIC_API_URL || process.env.API_BASE_URL || "").replace(/\/+$/, "");
 
 const categoryPages = {
   "new-arrivals": {
@@ -272,6 +273,7 @@ function wrapStorefrontPage(title, description, content) {
     <main class="landing-shell shop-shell">
       ${content}
     </main>
+    <script>window.__PEACEJEWEL_API_BASE__ = ${JSON.stringify(apiBaseUrl)};</script>
     <script src="/menu.js"></script>
     <script src="/store.js"></script>
   </body>
@@ -365,6 +367,7 @@ function renderCategoryPage(page, inventory) {
       </footer>
       <div class="copyright">Copyright 2026 - PeaceJewel.com All rights reserved</div>
     </main>
+    <script>window.__PEACEJEWEL_API_BASE__ = ${JSON.stringify(apiBaseUrl)};</script>
     <script src="/menu.js"></script>
     <script src="/store.js"></script>
   </body>
@@ -480,6 +483,7 @@ function renderProductPage(product, inventory) {
       </footer>
       <div class="copyright">Copyright 2026 - PeaceJewel.com All rights reserved</div>
     </main>
+    <script>window.__PEACEJEWEL_API_BASE__ = ${JSON.stringify(apiBaseUrl)};</script>
     <script src="/menu.js"></script>
     <script src="/store.js"></script>
   </body>
