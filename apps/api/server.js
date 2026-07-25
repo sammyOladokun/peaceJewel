@@ -3,6 +3,7 @@ const fs = require("node:fs");
 const fsp = require("node:fs/promises");
 const path = require("node:path");
 const crypto = require("node:crypto");
+const postgres = require("postgres");
 
 const port = Number(process.env.PORT || 4000);
 const rootDir = __dirname;
@@ -12,6 +13,16 @@ const inventoryPath = path.join(dataDir, "inventory.json");
 const cartStatePath = path.join(dataDir, "cart-state.json");
 const ordersPath = path.join(dataDir, "orders.json");
 const flutterwaveSecretKey = process.env.FLW_SECRET_KEY || "";
+const cloudinaryUrl = process.env.CLOUDINARY_URL || "";
+const databaseUrl = String(process.env.DATABASE_URL || "").trim();
+const sql = databaseUrl
+  ? postgres(databaseUrl, {
+      ssl: "require",
+      max: 10,
+      idle_timeout: 20,
+      connect_timeout: 10
+    })
+  : null;
 const webBaseUrl = (process.env.WEB_BASE_URL || "http://localhost:3000").replace(/\/+$/, "");
 
 const defaultInventory = [
@@ -275,6 +286,52 @@ async function bootstrap() {
 }
 
 async function loadInventory() {
+  if (sql) {
+    try {
+      const rows = await sql`
+        SELECT
+          p.id,
+          p.sku,
+          p.slug,
+          p.name,
+          p.category,
+          p.description,
+          p.price_cents,
+          p.stock,
+          p.status,
+          p.active,
+          p.sizes,
+          p.colors,
+          p.collections,
+          p.benefit_primary_text,
+          p.benefit_secondary_text,
+          COALESCE(
+            NULLIF(p.cover_image_url, ''),
+            (
+              SELECT pi.image_url
+              FROM product_images pi
+              WHERE pi.product_id = p.id
+              ORDER BY pi.is_primary DESC, pi.sort_order ASC, pi.id ASC
+              LIMIT 1
+            ),
+            '/assets/Vector.png'
+          ) AS image_url
+        FROM products p
+        ORDER BY p.created_at ASC, p.name ASC
+      `;
+
+      if (rows.length) {
+        return rows.map(mapProductRowToInventoryItem);
+      }
+
+      const seeded = structuredClone(defaultInventory).map(normalizeInventoryItem);
+      await saveInventory(seeded);
+      return seeded;
+    } catch (error) {
+      console.error("Failed to load inventory from Neon", error);
+    }
+  }
+
   try {
     const raw = await fsp.readFile(inventoryPath, "utf8");
     const parsed = JSON.parse(raw);
@@ -290,6 +347,34 @@ async function loadInventory() {
 }
 
 async function loadCartStates() {
+  if (sql) {
+    try {
+      const rows = await sql`
+        SELECT cart_id, id, product_id, product_name, image_url, price_cents, quantity, variant, source, created_at
+        FROM cart_items
+        ORDER BY created_at ASC, id ASC
+      `;
+
+      return rows.reduce((accumulator, row) => {
+        const cartId = String(row.cart_id || "");
+        if (!cartId) return accumulator;
+        if (!accumulator[cartId]) accumulator[cartId] = [];
+        accumulator[cartId].push({
+          id: String(row.product_id || row.id || ""),
+          name: String(row.product_name || "Product"),
+          image: String(row.image_url || "/assets/Vector.png"),
+          priceCents: Math.max(0, Math.round(Number(row.price_cents || 0))),
+          quantity: Math.max(1, clampStock(row.quantity || 1)),
+          variant: String(row.variant || ""),
+          source: String(row.source || "")
+        });
+        return accumulator;
+      }, {});
+    } catch (error) {
+      console.error("Failed to load cart state from Neon", error);
+    }
+  }
+
   try {
     const raw = await fsp.readFile(cartStatePath, "utf8");
     const parsed = JSON.parse(raw);
@@ -306,6 +391,58 @@ async function loadCartStates() {
 }
 
 async function loadOrders() {
+  if (sql) {
+    try {
+      const [orderRows, itemRows] = await Promise.all([
+        sql`
+          SELECT id, tx_ref, cart_id, customer_name, customer_email, customer_phone, currency, amount_cents, status, payment_status, transaction_id, paid_at, created_at, updated_at
+          FROM orders
+          ORDER BY created_at DESC, id DESC
+        `,
+        sql`
+          SELECT order_id, product_id, product_name, image_url, price_cents, quantity, variant
+          FROM order_items
+          ORDER BY id ASC
+        `
+      ]);
+
+      const itemsByOrderId = itemRows.reduce((accumulator, item) => {
+        if (!accumulator[item.order_id]) accumulator[item.order_id] = [];
+        accumulator[item.order_id].push(normalizeCartItem({
+          id: item.product_id,
+          name: item.product_name,
+          image: item.image_url,
+          priceCents: item.price_cents,
+          quantity: item.quantity,
+          variant: item.variant
+        }));
+        return accumulator;
+      }, {});
+
+      return orderRows.map((row) => normalizeOrder({
+        id: String(row.id || ""),
+        txRef: String(row.tx_ref || ""),
+        cartId: String(row.cart_id || ""),
+        customer: {
+          name: String(row.customer_name || ""),
+          email: String(row.customer_email || ""),
+          phone: String(row.customer_phone || "")
+        },
+        currency: String(row.currency || "NGN"),
+        amountCents: Number(row.amount_cents || 0),
+        status: String(row.status || "pending"),
+        paymentStatus: String(row.payment_status || ""),
+        transactionId: String(row.transaction_id || ""),
+        paidAt: row.paid_at || null,
+        createdAt: row.created_at || null,
+        updatedAt: row.updated_at || null,
+        items: itemsByOrderId[row.id] || []
+      }));
+    } catch (error) {
+      console.error("Failed to load orders from Neon", error);
+    }
+  }
+
   try {
     const raw = await fsp.readFile(ordersPath, "utf8");
     const parsed = JSON.parse(raw);
@@ -319,14 +456,150 @@ async function loadOrders() {
 }
 
 async function saveInventory(nextInventory = inventory) {
+  if (sql) {
+    try {
+      const normalized = nextInventory.map(normalizeInventoryItem);
+      await sql.begin(async (trx) => {
+        for (const item of normalized) {
+          await trx`
+            INSERT INTO products (
+              id, sku, slug, name, category, description, price_cents, stock, status, active,
+              sizes, colors, collections, benefit_primary_text, benefit_secondary_text, cover_image_url,
+              updated_at
+            ) VALUES (
+              ${item.id}, ${item.sku}, ${item.slug}, ${item.name}, ${item.category}, ${item.description},
+              ${item.priceCents}, ${item.stock}, ${item.status}, ${item.active},
+              ${item.sizes}, ${item.colors}, ${item.collections}, ${item.benefitPrimaryText},
+              ${item.benefitSecondaryText}, ${item.imageUrl}, NOW()
+            )
+            ON CONFLICT (id) DO UPDATE SET
+              sku = EXCLUDED.sku,
+              slug = EXCLUDED.slug,
+              name = EXCLUDED.name,
+              category = EXCLUDED.category,
+              description = EXCLUDED.description,
+              price_cents = EXCLUDED.price_cents,
+              stock = EXCLUDED.stock,
+              status = EXCLUDED.status,
+              active = EXCLUDED.active,
+              sizes = EXCLUDED.sizes,
+              colors = EXCLUDED.colors,
+              collections = EXCLUDED.collections,
+              benefit_primary_text = EXCLUDED.benefit_primary_text,
+              benefit_secondary_text = EXCLUDED.benefit_secondary_text,
+              cover_image_url = EXCLUDED.cover_image_url,
+              updated_at = NOW()
+          `;
+
+          if (item.imageUrl) {
+            const existingPrimary = await trx`
+              SELECT id
+              FROM product_images
+              WHERE product_id = ${item.id} AND is_primary = TRUE
+              ORDER BY sort_order ASC, id ASC
+              LIMIT 1
+            `;
+
+            if (existingPrimary.length) {
+              await trx`
+                UPDATE product_images
+                SET image_url = ${item.imageUrl},
+                    alt_text = ${item.name},
+                    sort_order = 0,
+                    is_primary = TRUE
+                WHERE id = ${existingPrimary[0].id}
+              `;
+            } else {
+              await trx`
+                INSERT INTO product_images (product_id, image_url, alt_text, sort_order, is_primary)
+                VALUES (${item.id}, ${item.imageUrl}, ${item.name}, 0, TRUE)
+              `;
+            }
+          }
+        }
+      });
+      return;
+    } catch (error) {
+      console.error("Failed to save inventory to Neon", error);
+    }
+  }
+
   await fsp.writeFile(inventoryPath, JSON.stringify(nextInventory, null, 2));
 }
 
 async function saveCartStates(nextCartStates = cartStates) {
+  if (sql) {
+    try {
+      await sql.begin(async (trx) => {
+        await trx`DELETE FROM cart_items`;
+        for (const [cartId, items] of Object.entries(nextCartStates || {})) {
+          for (const item of Array.isArray(items) ? items.map(normalizeCartItem) : []) {
+            await trx`
+              INSERT INTO cart_items (
+                cart_id, product_id, product_name, image_url, price_cents, quantity, variant, source, created_at
+              ) VALUES (
+                ${String(cartId)}, ${item.id}, ${item.name}, ${item.image}, ${item.priceCents},
+                ${item.quantity}, ${item.variant}, ${item.source}, NOW()
+              )
+            `;
+          }
+        }
+      });
+      return;
+    } catch (error) {
+      console.error("Failed to save cart state to Neon", error);
+    }
+  }
+
   await fsp.writeFile(cartStatePath, JSON.stringify(nextCartStates, null, 2));
 }
 
 async function saveOrders(nextOrders = orderHistory) {
+  if (sql) {
+    try {
+      const normalizedOrders = nextOrders.map(normalizeOrder);
+      await sql.begin(async (trx) => {
+        await trx`DELETE FROM order_items`;
+        await trx`DELETE FROM orders`;
+
+        for (const order of normalizedOrders) {
+          await trx`
+            INSERT INTO orders (
+              id, tx_ref, cart_id, customer_name, customer_email, customer_phone, currency,
+              amount_cents, status, payment_status, transaction_id, paid_at, created_at, updated_at
+            ) VALUES (
+              ${order.id}, ${order.txRef}, ${order.cartId},
+              ${String(order.customer?.name || "")},
+              ${String(order.customer?.email || "")},
+              ${String(order.customer?.phone || "")},
+              ${String(order.currency || "NGN")},
+              ${Number(order.amountCents || 0)},
+              ${String(order.status || "pending")},
+              ${String(order.paymentStatus || "")},
+              ${String(order.transactionId || "")},
+              ${order.paidAt || null},
+              ${order.createdAt || new Date().toISOString()},
+              ${order.updatedAt || new Date().toISOString()}
+            )
+          `;
+
+          for (const item of Array.isArray(order.items) ? order.items.map(normalizeCartItem) : []) {
+            await trx`
+              INSERT INTO order_items (
+                order_id, product_id, product_name, image_url, price_cents, quantity, variant
+              ) VALUES (
+                ${order.id}, ${item.id}, ${item.name}, ${item.image}, ${item.priceCents}, ${item.quantity}, ${item.variant}
+              )
+            `;
+          }
+        }
+      });
+      return;
+    } catch (error) {
+      console.error("Failed to save orders to Neon", error);
+    }
+  }
+
   await fsp.writeFile(ordersPath, JSON.stringify(nextOrders, null, 2));
 }
 
@@ -335,6 +608,10 @@ async function saveUpload(body) {
   const mimeType = body.mimeType || "image/png";
   const data = String(body.data || body.base64 || "");
   const payload = data.includes(",") ? data.split(",").pop() : data;
+  if (cloudinaryUrl) {
+    return uploadToCloudinary({ name, mimeType, payload });
+  }
+
   const buffer = Buffer.from(payload, "base64");
   const extension = mimeTypeToExtension(mimeType) || path.extname(name) || ".png";
   const safeName = name.replace(path.extname(name), "") + extension;
@@ -345,6 +622,83 @@ async function saveUpload(body) {
     name: path.basename(filePath),
     mimeType
   };
+}
+
+async function uploadToCloudinary({ name, mimeType, payload }) {
+  const config = parseCloudinaryUrl(cloudinaryUrl);
+  const buffer = Buffer.from(payload, "base64");
+  const publicId = sanitizeFilename(name.replace(path.extname(name), "")) || `peacejewel-${Date.now()}`;
+  const formData = new FormData();
+  formData.append("file", new Blob([buffer], { type: mimeType }), name);
+  formData.append("folder", "peacejewel/products");
+  formData.append("public_id", publicId);
+  formData.append("use_filename", "true");
+  formData.append("unique_filename", "true");
+  formData.append("overwrite", "true");
+
+  const response = await fetch(`https://api.cloudinary.com/v1_1/${encodeURIComponent(config.cloudName)}/image/upload`, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${Buffer.from(`${config.apiKey}:${config.apiSecret}`).toString("base64")}`
+    },
+    body: formData
+  });
+
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok || !result?.secure_url) {
+    throw new Error(result?.error?.message || "Unable to upload image to Cloudinary");
+  }
+
+  return {
+    url: result.secure_url,
+    name: result.original_filename ? `${result.original_filename}.${result.format || mimeTypeToExtension(mimeType).replace(".", "")}` : path.basename(result.secure_url),
+    mimeType,
+    publicId: result.public_id,
+    assetId: result.asset_id
+  };
+}
+
+function parseCloudinaryUrl(value) {
+  const raw = String(value || "").trim();
+  if (!raw.startsWith("cloudinary://")) {
+    throw new Error("CLOUDINARY_URL is invalid");
+  }
+
+  const withoutScheme = raw.slice("cloudinary://".length);
+  const atIndex = withoutScheme.lastIndexOf("@");
+  const credentials = atIndex >= 0 ? withoutScheme.slice(0, atIndex) : "";
+  const cloudName = atIndex >= 0 ? withoutScheme.slice(atIndex + 1) : "";
+  const colonIndex = credentials.indexOf(":");
+  if (!credentials || !cloudName || colonIndex === -1) {
+    throw new Error("CLOUDINARY_URL is invalid");
+  }
+
+  return {
+    apiKey: decodeURIComponent(credentials.slice(0, colonIndex)),
+    apiSecret: decodeURIComponent(credentials.slice(colonIndex + 1)),
+    cloudName: decodeURIComponent(cloudName)
+  };
+}
+
+function mapProductRowToInventoryItem(row) {
+  return normalizeInventoryItem({
+    id: row.id,
+    sku: row.sku,
+    slug: row.slug,
+    name: row.name,
+    category: row.category,
+    description: row.description,
+    imageUrl: row.image_url,
+    priceCents: row.price_cents,
+    stock: row.stock,
+    status: row.status,
+    active: row.active,
+    sizes: row.sizes,
+    colors: row.colors,
+    collections: row.collections,
+    benefitPrimaryText: row.benefit_primary_text,
+    benefitSecondaryText: row.benefit_secondary_text
+  });
 }
 
 function normalizeCartItem(item) {

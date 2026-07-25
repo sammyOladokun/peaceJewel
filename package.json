@@ -18,5 +18,9 @@
     "db:down": "docker compose down",
     "lint": "npm run lint --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "dependencies": {
+    "cloudinary": "^2.10.0",
+    "postgres": "^3.4.9"
   }
 }
