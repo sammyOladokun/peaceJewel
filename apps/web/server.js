@@ -60,7 +60,7 @@ const categoryPages = {
   }
 };
 
-const server = http.createServer((request, response) => {
+const server = http.createServer(async (request, response) => {
   const requestPath = new URL(request.url, `http://${request.headers.host}`).pathname;
 
   if (requestPath === "/") {
@@ -71,14 +71,14 @@ const server = http.createServer((request, response) => {
 
   if (requestPath === "/catalog" || requestPath === "/catalog/") {
     response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-    response.end(renderCatalogIndexPage(loadInventorySnapshot()));
+    response.end(renderCatalogIndexPage(await loadInventorySnapshot()));
     return;
   }
 
   if (requestPath.startsWith("/catalog/") && requestPath !== "/catalog/") {
     const slug = requestPath.replace("/catalog/", "");
     const page = categoryPages[slug];
-    const inventory = loadInventorySnapshot();
+    const inventory = await loadInventorySnapshot();
 
     if (!page) {
       response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
@@ -92,7 +92,8 @@ const server = http.createServer((request, response) => {
   }
 
   if (requestPath === "/product") {
-    const product = resolveProductFromRequest(request.url, loadInventorySnapshot());
+    const inventory = await loadInventorySnapshot();
+    const product = resolveProductFromRequest(request.url, inventory);
     if (!product) {
       response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
       response.end("Not found");
@@ -100,7 +101,7 @@ const server = http.createServer((request, response) => {
     }
 
     response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-    response.end(renderProductPage(product, loadInventorySnapshot()));
+    response.end(renderProductPage(product, inventory));
     return;
   }
 
@@ -124,7 +125,7 @@ const server = http.createServer((request, response) => {
     }
 
     response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-    response.end(renderAdminInventoryPage(loadInventorySnapshot()));
+    response.end(renderAdminInventoryPage(await loadInventorySnapshot()));
     return;
   }
 
@@ -148,9 +149,10 @@ const server = http.createServer((request, response) => {
 
     const url = new URL(request.url, `http://${request.headers.host}`);
     const mode = requestPath === "/admin/add" ? "add" : "edit";
+    const inventory = await loadInventorySnapshot();
     const item = mode === "add"
       ? createAdminEditorSeed()
-      : resolveAdminEditorItem(url, loadInventorySnapshot());
+      : resolveAdminEditorItem(url, inventory);
 
     if (mode === "edit" && !item) {
       response.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
@@ -454,7 +456,7 @@ function renderAdminEditorPage(mode, item) {
 
 function renderAdminInventoryPage(inventory) {
   const rows = inventory.length
-    ? inventory.map(renderAdminRow).join("")
+    ? inventory.map(renderAdminInventoryRow).join("")
     : `<div class="admin-table__empty">No inventory items yet.</div>`;
 
   return `<!doctype html>
@@ -529,7 +531,30 @@ function renderAdminInventoryPage(inventory) {
     <script src="/menu.js"></script>
     <script src="/store.js"></script>
   </body>
-</html>`;
+  </html>`;
+}
+
+function renderAdminInventoryRow(item) {
+  const statusClass = item.stock <= 0 ? "admin-badge--empty" : item.stock <= 5 ? "admin-badge--warn" : "admin-badge--ok";
+  const statusLabel = item.stock <= 0 ? "Out" : item.stock <= 5 ? "Low Stock" : "In Stock";
+
+  return `<div class="admin-table__row" data-admin-id="${escapeHtml(item.id)}">
+    <div class="admin-product">
+      <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" />
+      <div>
+        <strong>${escapeHtml(item.name)}</strong>
+        <span>SKU ${escapeHtml(item.sku || generateSku(item.name || "Product"))}</span>
+      </div>
+    </div>
+    <span class="admin-badge ${statusClass}">${statusLabel}</span>
+    <div class="admin-stock-control">
+      <button type="button" disabled>−</button>
+      <strong>${String(Number(item.stock || 0)).padStart(2, "0")}</strong>
+      <button type="button" disabled>+</button>
+    </div>
+    <strong>${formatMoney(item.priceCents || 0)}</strong>
+    <a class="button button--ghost admin-row-action" href="/admin/edit?id=${encodeURIComponent(item.id)}">Edit</a>
+  </div>`;
 }
 
 function renderAdminCollectionOptions(selectedCollections) {
@@ -894,7 +919,19 @@ function shareCollection(left, right) {
   return leftCollections.some((collection) => rightCollections.includes(collection));
 }
 
-function loadInventorySnapshot() {
+async function loadInventorySnapshot() {
+  if (apiBaseUrl) {
+    try {
+      const response = await fetch(`${apiBaseUrl}/inventory`);
+      if (response.ok) {
+        const inventory = await response.json();
+        if (Array.isArray(inventory)) {
+          return inventory.map(normalizeInventoryItem);
+        }
+      }
+    } catch {}
+  }
+
   try {
     const raw = fs.readFileSync(inventoryPath, "utf8");
     const parsed = JSON.parse(raw);
