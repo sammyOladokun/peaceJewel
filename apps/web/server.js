@@ -20,7 +20,8 @@ const menuJs = fs.readFileSync(path.join(rootDir, "menu.js"), "utf8");
 const storeJs = fs.readFileSync(path.join(rootDir, "store.js"), "utf8");
 const adminKey = process.env.ADMIN_KEY || "peacejewel-admin";
 const adminSessionToken = crypto.randomBytes(24).toString("hex");
-const apiBaseUrl = (process.env.NEXT_PUBLIC_API_URL || process.env.API_BASE_URL || "").replace(/\/+$/, "");
+const clientApiBaseUrl = (process.env.NEXT_PUBLIC_API_URL || process.env.API_BASE_URL || "").replace(/\/+$/, "");
+const serverApiBaseUrl = (process.env.API_INTERNAL_URL || clientApiBaseUrl).replace(/\/+$/, "");
 
 const categoryPages = {
   "new-arrivals": {
@@ -124,8 +125,37 @@ const server = http.createServer(async (request, response) => {
       return;
     }
 
+    const url = new URL(request.url, `http://${request.headers.host}`);
+    const filter = url.searchParams.get("filter") || "all";
+    const query = url.searchParams.get("q") || "";
     response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-    response.end(renderAdminInventoryPage(await loadInventorySnapshot()));
+    response.end(renderAdminInventoryPage(await loadInventorySnapshot(), filter, query));
+    return;
+  }
+
+  if (requestPath === "/admin/orders") {
+    if (!isAdminAuthenticated(request.headers.cookie)) {
+      response.writeHead(302, { Location: "/admin-login" });
+      response.end();
+      return;
+    }
+
+    const [inventory, orders] = await Promise.all([loadInventorySnapshot(), loadOrdersSnapshot()]);
+    response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+    response.end(renderAdminOrdersPage(orders, inventory));
+    return;
+  }
+
+  if (requestPath === "/admin/alerts") {
+    if (!isAdminAuthenticated(request.headers.cookie)) {
+      response.writeHead(302, { Location: "/admin-login" });
+      response.end();
+      return;
+    }
+
+    const [inventory, orders] = await Promise.all([loadInventorySnapshot(), loadOrdersSnapshot()]);
+    response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+    response.end(renderAdminAlertsPage(buildAdminAlerts(inventory, orders), inventory, orders));
     return;
   }
 
@@ -326,7 +356,9 @@ function renderAdminEditorPage(mode, item) {
         <a class="site-brand" href="/">PeaceJewel</a>
         <nav class="site-nav" id="site-nav">
           <a href="/admin">Dashboard</a>
-          <a href="/admin/add">Add Product</a>
+          <a href="/admin/inventory">Inventory</a>
+          <a href="/admin/orders">Orders</a>
+          <a href="/admin/alerts">Alerts</a>
           <a href="/catalog">View Store</a>
         </nav>
         <div class="site-actions" aria-label="Utilities">
@@ -350,17 +382,16 @@ function renderAdminEditorPage(mode, item) {
         </div>
       </section>
 
-      <section class="admin-editor">
-        <section class="admin-card admin-editor__card">
-          <div class="admin-card__heading">
-            <div>
-              <p class="eyebrow">${isAddMode ? "New Product" : "Edit Product"}</p>
-              <h3>${escapeHtml(item.name || "Untitled Product")}</h3>
-            </div>
-            <div class="admin-card__meta">${isAddMode ? "Blank draft" : `SKU ${escapeHtml(item.sku || generateSku(item.name || "Product"))}`}</div>
+      <section class="admin-editor admin-editor--flat">
+        <div class="admin-card__heading admin-editor__heading">
+          <div>
+            <p class="eyebrow">${isAddMode ? "New Product" : "Edit Product"}</p>
+            <h3>${escapeHtml(item.name || "Untitled Product")}</h3>
           </div>
+          <div class="admin-card__meta">${isAddMode ? "Blank draft" : `SKU ${escapeHtml(item.sku || generateSku(item.name || "Product"))}`}</div>
+        </div>
 
-          <form class="admin-form" data-admin-mode="${isAddMode ? "add" : "edit"}" data-admin-id="${escapeHtml(item.id || "")}">
+        <form class="admin-form admin-form--flat" data-admin-mode="${isAddMode ? "add" : "edit"}" data-admin-id="${escapeHtml(item.id || "")}">
             <label class="admin-field admin-field--full">
               <span>Product Name</span>
               <input type="text" value="${escapeHtml(isAddMode ? "" : item.name || "")}" placeholder="Enter product name" data-admin-field="name" />
@@ -444,20 +475,26 @@ function renderAdminEditorPage(mode, item) {
               <button class="button button--dark" type="button" data-admin-action="update">${isAddMode ? "Add Item" : "Update Item"}</button>
             </div>
           </form>
-        </section>
       </section>
     </main>
-    <script>window.__PEACEJEWEL_API_BASE__ = ${JSON.stringify((process.env.NEXT_PUBLIC_API_URL || process.env.API_BASE_URL || "").replace(/\/+$/, ""))};</script>
+    <script>window.__PEACEJEWEL_API_BASE__ = ${JSON.stringify(clientApiBaseUrl)};</script>
     <script src="/menu.js"></script>
     <script src="/store.js"></script>
   </body>
   </html>`;
 }
 
-function renderAdminInventoryPage(inventory) {
-  const rows = inventory.length
-    ? inventory.map(renderAdminInventoryRow).join("")
-    : `<div class="admin-table__empty">No inventory items yet.</div>`;
+function renderAdminInventoryPage(inventory, filterName = "all", searchTerm = "") {
+  const counts = buildInventoryFilterCounts(inventory);
+  const activeFilter = normalizeInventoryFilter(filterName);
+  const normalizedSearch = normalizeInventorySearch(searchTerm);
+  const filteredInventory = filterInventoryRows(inventory, activeFilter, normalizedSearch);
+  const rows = filteredInventory.length
+    ? filteredInventory.map(renderAdminInventoryRow).join("")
+    : `<div class="admin-table__empty">${normalizedSearch ? "No products match your search." : "No inventory items yet."}</div>`;
+  const resultLabel = normalizedSearch
+    ? `${filteredInventory.length} product${filteredInventory.length === 1 ? "" : "s"} found`
+    : `${inventory.length ? `${filteredInventory.length} products available` : "No products yet"}`;
 
   return `<!doctype html>
 <html lang="en">
@@ -475,12 +512,20 @@ function renderAdminInventoryPage(inventory) {
     <header class="site-header">
       <div class="site-header__inner">
         <a class="site-brand" href="/">PeaceJewel</a>
-        <nav class="site-nav" id="site-nav">
-          <a href="/admin">Dashboard</a>
-          <a href="/admin/add">Add Product</a>
-          <a href="/catalog">View Store</a>
+        <nav class="site-nav site-nav--inventory" id="site-nav" aria-label="Inventory filters">
+          <a class="admin-inventory-filter${activeFilter === "all" ? " is-active" : ""}" href="${escapeHtml(buildInventoryHref("all", normalizedSearch))}" data-filter-count="${counts.all}">All Product</a>
+          <a class="admin-inventory-filter${activeFilter === "active" ? " is-active" : ""}" href="${escapeHtml(buildInventoryHref("active", normalizedSearch))}" data-filter-count="${counts.active}">Active SKUs</a>
+          <a class="admin-inventory-filter${activeFilter === "low" ? " is-active" : ""}" href="${escapeHtml(buildInventoryHref("low", normalizedSearch))}" data-filter-count="${counts.low}">Low Stock Items</a>
+          <a class="admin-inventory-filter${activeFilter === "out" ? " is-active" : ""}" href="${escapeHtml(buildInventoryHref("out", normalizedSearch))}" data-filter-count="${counts.out}">Out of Stock</a>
         </nav>
         <div class="site-actions" aria-label="Utilities">
+          <form class="admin-inventory-search admin-inventory-search--header" method="get" action="/admin/inventory" data-admin-inventory-search>
+            <input type="hidden" name="filter" value="${escapeHtml(activeFilter)}" />
+            <label class="admin-inventory-search__field">
+              <span class="sr-only">Search inventory</span>
+              <input type="search" name="q" value="${escapeHtml(searchTerm)}" placeholder="Search products, SKU, category..." />
+            </label>
+          </form>
           <button class="icon-button site-menu-button" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-nav">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
           </button>
@@ -495,37 +540,38 @@ function renderAdminInventoryPage(inventory) {
           <h2>All store products.</h2>
           <p class="admin-toolbar__note">Browse every stored product, jump into editing, or return to the dashboard overview.</p>
         </div>
-        <div class="admin-toolbar__actions">
+        <div class="admin-toolbar__actions admin-toolbar__actions--inventory">
+          <form class="admin-inventory-search admin-inventory-search--toolbar" method="get" action="/admin/inventory" data-admin-inventory-search>
+            <input type="hidden" name="filter" value="${escapeHtml(activeFilter)}" />
+            <label class="admin-inventory-search__field">
+              <span class="sr-only">Search inventory</span>
+              <input type="search" name="q" value="${escapeHtml(searchTerm)}" placeholder="Search products, SKU, category..." />
+            </label>
+            ${normalizedSearch ? `<a class="button button--ghost" href="${escapeHtml(buildInventoryHref(activeFilter, ""))}">Clear</a>` : ""}
+          </form>
           <a class="button button--ghost" href="/admin">Back to dashboard</a>
           <a class="button button--dark" href="/admin/add">Add Product</a>
         </div>
       </section>
 
-      <section class="admin-editor admin-inventory-page">
-        <section class="admin-card admin-editor__card">
-          <div class="admin-card__heading">
-            <div>
-              <p class="eyebrow">Inventory List</p>
-              <h3>${inventory.length ? `${inventory.length} products available` : "No products yet"}</h3>
-            </div>
-            <div class="admin-card__heading-actions">
-              <div class="admin-card__meta">${inventory.length ? "Click Edit on any row to update it." : "Add your first product to begin."}</div>
-            </div>
+      <section class="admin-inventory-page">
+        <div class="admin-card__heading admin-inventory-page__heading">
+          <div>
+            <p class="eyebrow">Inventory List</p>
+            <h3>${escapeHtml(resultLabel)}</h3>
           </div>
+          <div class="admin-card__meta">${normalizedSearch ? `Searching for “${escapeHtml(searchTerm)}”` : inventory.length ? "Click Edit on any row to update it." : "Add your first product to begin."}</div>
+        </div>
 
-          <div class="admin-table">
-            <div class="admin-table__row admin-table__row--head">
-              <span>Product</span>
-              <span>Status</span>
-              <span>Stock</span>
-              <span>Price</span>
-              <span>Edit</span>
-            </div>
-            <div class="admin-table__body">
-              ${rows}
-            </div>
+        <div class="admin-table admin-table--flat">
+          <div class="admin-table__row admin-table__row--head">
+            <span>Product</span>
+            <span>Status</span>
+            <span>Stock</span>
+            <span>Price</span>
           </div>
-        </section>
+          ${rows}
+        </div>
       </section>
     </main>
     <script src="/menu.js"></script>
@@ -537,10 +583,12 @@ function renderAdminInventoryPage(inventory) {
 function renderAdminInventoryRow(item) {
   const statusClass = item.stock <= 0 ? "admin-badge--empty" : item.stock <= 5 ? "admin-badge--warn" : "admin-badge--ok";
   const statusLabel = item.stock <= 0 ? "Out" : item.stock <= 5 ? "Low Stock" : "In Stock";
+  const imageUrl = String(item.imageUrl || item.image || "/assets/Vector.png");
+  const stockState = item.stock <= 0 ? "out" : item.stock <= 5 ? "low" : "active";
 
-  return `<div class="admin-table__row" data-admin-id="${escapeHtml(item.id)}">
+  return `<div class="admin-table__row" data-admin-id="${escapeHtml(item.id)}" data-admin-inventory-state="${stockState}" data-admin-inventory-category="${escapeHtml(slugify(item.category || "products"))}">
     <div class="admin-product">
-      <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.name)}" />
+      <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(item.name)}" />
       <div>
         <strong>${escapeHtml(item.name)}</strong>
         <span>SKU ${escapeHtml(item.sku || generateSku(item.name || "Product"))}</span>
@@ -553,8 +601,293 @@ function renderAdminInventoryRow(item) {
       <button type="button" disabled>+</button>
     </div>
     <strong>${formatMoney(item.priceCents || 0)}</strong>
-    <a class="button button--ghost admin-row-action" href="/admin/edit?id=${encodeURIComponent(item.id)}">Edit</a>
+    <div class="admin-row-actions">
+      <a class="button button--ghost admin-row-action" href="/admin/edit?id=${encodeURIComponent(item.id)}" aria-label="Edit product">
+        Edit
+      </a>
+      <button class="button button--ghost admin-row-action admin-row-action--danger" type="button" data-admin-delete-id="${escapeHtml(item.id)}" aria-label="Delete product">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7m-7 0h8m-7 0 .5 13h5L16 7" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
   </div>`;
+}
+
+function buildInventoryFilterCounts(inventory) {
+  return {
+    all: inventory.length,
+    active: inventory.filter((item) => item.active !== false && item.stock > 0).length,
+    low: inventory.filter((item) => item.active !== false && item.stock > 0 && item.stock <= 5).length,
+    out: inventory.filter((item) => item.active !== false && item.stock <= 0).length
+  };
+}
+
+function buildInventoryHref(filterName, searchTerm = "") {
+  const params = new URLSearchParams();
+  params.set("filter", normalizeInventoryFilter(filterName));
+  const normalizedSearch = normalizeInventorySearch(searchTerm);
+  if (normalizedSearch) {
+    params.set("q", normalizedSearch);
+  }
+  const query = params.toString();
+  return `/admin/inventory${query ? `?${query}` : ""}`;
+}
+
+function normalizeInventoryFilter(filterName) {
+  const normalized = String(filterName || "all").trim().toLowerCase();
+  return ["all", "active", "low", "out"].includes(normalized) ? normalized : "all";
+}
+
+function normalizeInventorySearch(searchTerm) {
+  return String(searchTerm || "").trim();
+}
+
+function filterInventoryRows(inventory, filterName, searchTerm = "") {
+  const normalized = normalizeInventoryFilter(filterName);
+  const normalizedSearch = normalizeInventorySearch(searchTerm).toLowerCase();
+  return inventory.filter((item) => {
+    const stockState = item.stock <= 0 ? "out" : item.stock <= 5 ? "low" : "active";
+    if (normalized !== "all" && stockState !== normalized) return false;
+    if (!normalizedSearch) return true;
+
+    const searchable = [
+      item.name,
+      item.sku,
+      item.category,
+      item.status,
+      ...(Array.isArray(item.collections) ? item.collections : []),
+      ...(Array.isArray(item.colors) ? item.colors : []),
+      ...(Array.isArray(item.sizes) ? item.sizes : [])
+    ]
+      .map((value) => String(value || "").toLowerCase())
+      .join(" ");
+
+    return searchable.includes(normalizedSearch);
+  });
+}
+
+function renderAdminOrderRow(order) {
+  const status = normalizeText(order.status) || "pending";
+  const statusLabel = status === "paid" ? "Paid" : status === "failed" ? "Failed" : "Pending";
+  const total = formatMoney(order.amountCents || 0);
+  const customerName = order.customer?.name || "Guest Customer";
+  const createdAt = order.createdAt ? new Date(order.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "Today";
+
+  return `<div class="admin-order-item">
+    <div>
+      <strong>${escapeHtml(customerName)}</strong>
+      <span>${escapeHtml(createdAt)} · ${escapeHtml(order.txRef || order.id || "Order")}</span>
+    </div>
+    <div class="admin-order-item__meta">
+      <span class="admin-badge ${status === "paid" ? "admin-badge--ok" : status === "failed" ? "admin-badge--empty" : "admin-badge--warn"}">${statusLabel}</span>
+      <strong>${escapeHtml(total)}</strong>
+    </div>
+  </div>`;
+}
+
+function renderAdminAlertRow(alert) {
+  return `<li>
+    <strong>${escapeHtml(alert.name)}</strong>
+    <span>${escapeHtml(alert.message)}</span>
+  </li>`;
+}
+
+function renderAdminOrdersPage(orders, inventory) {
+  const pendingOrders = orders.filter((order) => normalizeText(order.status) === "pending");
+  const paidOrders = orders.filter((order) => normalizeText(order.status) === "paid");
+  const totalRevenue = orders
+    .filter((order) => normalizeText(order.status) === "paid")
+    .reduce((sum, order) => sum + Number(order.amountCents || 0), 0);
+
+  const rows = orders.length ? orders.map(renderAdminOrderRow).join("") : `<li class="admin-order-list__empty">No orders yet.</li>`;
+
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PeaceJewel Admin — Orders</title>
+    <meta name="description" content="PeaceJewel admin orders page." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="site-header__inner">
+        <a class="site-brand" href="/">PeaceJewel</a>
+        <nav class="site-nav" id="site-nav">
+          <a href="/admin">Dashboard</a>
+          <a href="/admin/inventory">Inventory</a>
+          <a href="/admin/alerts">Alerts</a>
+          <a href="/catalog">View Store</a>
+        </nav>
+        <div class="site-actions" aria-label="Utilities">
+          <button class="icon-button site-menu-button" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-nav">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="landing-shell shop-shell admin-shell">
+      <section class="shop-toolbar admin-toolbar">
+        <div>
+          <p class="eyebrow">Orders</p>
+          <h2>Track what’s coming in.</h2>
+          <p class="admin-toolbar__note">Monitor pending checkouts, successful payments, and the latest order activity.</p>
+        </div>
+        <div class="admin-toolbar__actions">
+          <a class="button button--ghost" href="/admin">Back to dashboard</a>
+          <a class="button button--dark" href="/admin/alerts">View alerts</a>
+        </div>
+      </section>
+
+      <section class="admin-inventory-page">
+        <div class="admin-card__heading admin-inventory-page__heading">
+          <div>
+            <p class="eyebrow">Orders</p>
+            <h3>${orders.length ? `${orders.length} orders` : "No orders yet"}</h3>
+          </div>
+          <div class="admin-card__meta">${pendingOrders.length} pending · ${paidOrders.length} paid · ${formatMoney(totalRevenue)}</div>
+        </div>
+
+        <div class="admin-order-stats">
+          <article>
+            <span>Pending</span>
+            <strong>${String(pendingOrders.length).padStart(2, "0")}</strong>
+          </article>
+          <article>
+            <span>Paid</span>
+            <strong>${String(paidOrders.length).padStart(2, "0")}</strong>
+          </article>
+          <article>
+            <span>Revenue</span>
+            <strong>${formatMoney(totalRevenue)}</strong>
+          </article>
+        </div>
+
+        <ul class="admin-order-list admin-order-list--flat">
+          ${rows}
+        </ul>
+      </section>
+    </main>
+    <script src="/menu.js"></script>
+    <script src="/store.js"></script>
+  </body>
+</html>`;
+}
+
+function renderAdminAlertsPage(alerts, inventory, orders) {
+  const rows = alerts.length ? alerts.map(renderAdminAlertRow).join("") : `<li><strong>All clear</strong><span>No inventory alerts right now.</span></li>`;
+  const lowStockCount = inventory.filter((item) => item.stock > 0 && item.stock <= 5).length;
+  const outOfStockCount = inventory.filter((item) => item.stock <= 0).length;
+  const pendingCount = orders.filter((order) => normalizeText(order.status) === "pending").length;
+
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PeaceJewel Admin — Alerts</title>
+    <meta name="description" content="PeaceJewel admin alerts page." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="site-header__inner">
+        <a class="site-brand" href="/">PeaceJewel</a>
+        <nav class="site-nav" id="site-nav">
+          <a href="/admin">Dashboard</a>
+          <a href="/admin/inventory">Inventory</a>
+          <a href="/admin/orders">Orders</a>
+          <a href="/catalog">View Store</a>
+        </nav>
+        <div class="site-actions" aria-label="Utilities">
+          <button class="icon-button site-menu-button" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-nav">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="landing-shell shop-shell admin-shell">
+      <section class="shop-toolbar admin-toolbar">
+        <div>
+          <p class="eyebrow">Alerts</p>
+          <h2>What needs attention.</h2>
+          <p class="admin-toolbar__note">Keep an eye on low-stock products, stockouts, and order activity that needs a follow-up.</p>
+        </div>
+        <div class="admin-toolbar__actions">
+          <a class="button button--ghost" href="/admin">Back to dashboard</a>
+          <a class="button button--dark" href="/admin/orders">View orders</a>
+        </div>
+      </section>
+
+      <section class="admin-inventory-page">
+        <div class="admin-card__heading admin-inventory-page__heading">
+          <div>
+            <p class="eyebrow">Alerts</p>
+            <h3>${alerts.length ? `${alerts.length} active alerts` : "All clear"}</h3>
+          </div>
+          <div class="admin-card__meta">${lowStockCount} low stock · ${outOfStockCount} out of stock · ${pendingCount} pending orders</div>
+        </div>
+
+        <div class="admin-order-stats">
+          <article>
+            <span>Low stock</span>
+            <strong>${String(lowStockCount).padStart(2, "0")}</strong>
+          </article>
+          <article>
+            <span>Out of stock</span>
+            <strong>${String(outOfStockCount).padStart(2, "0")}</strong>
+          </article>
+          <article>
+            <span>Pending orders</span>
+            <strong>${String(pendingCount).padStart(2, "0")}</strong>
+          </article>
+        </div>
+
+        <ul class="admin-list admin-list--flat">
+          ${rows}
+        </ul>
+      </section>
+    </main>
+    <script src="/menu.js"></script>
+    <script src="/store.js"></script>
+  </body>
+</html>`;
+}
+
+function buildAdminAlerts(inventory, orders) {
+  const alerts = [];
+
+  for (const item of inventory) {
+    if (item.stock <= 0) {
+      alerts.push({
+        name: item.name,
+        message: "Inventory reached zero today."
+      });
+    } else if (item.stock <= 5) {
+      alerts.push({
+        name: item.name,
+        message: `Reorder soon — ${item.stock} units left.`
+      });
+    }
+  }
+
+  const pendingOrders = orders.filter((order) => normalizeText(order.status) === "pending");
+  if (pendingOrders.length) {
+    alerts.unshift({
+      name: "Pending Orders",
+      message: `${pendingOrders.length} order${pendingOrders.length === 1 ? "" : "s"} need review.`
+    });
+  }
+
+  return alerts;
 }
 
 function renderAdminCollectionOptions(selectedCollections) {
@@ -632,7 +965,7 @@ function wrapStorefrontPage(title, description, content) {
     <main class="landing-shell shop-shell">
       ${content}
     </main>
-    <script>window.__PEACEJEWEL_API_BASE__ = ${JSON.stringify(apiBaseUrl)};</script>
+    <script>window.__PEACEJEWEL_API_BASE__ = ${JSON.stringify(clientApiBaseUrl)};</script>
     <script src="/menu.js"></script>
     <script src="/store.js"></script>
   </body>
@@ -726,7 +1059,7 @@ function renderCategoryPage(page, inventory) {
       </footer>
       <div class="copyright">Copyright 2026 - PeaceJewel.com All rights reserved</div>
     </main>
-    <script>window.__PEACEJEWEL_API_BASE__ = ${JSON.stringify(apiBaseUrl)};</script>
+    <script>window.__PEACEJEWEL_API_BASE__ = ${JSON.stringify(clientApiBaseUrl)};</script>
     <script src="/menu.js"></script>
     <script src="/store.js"></script>
   </body>
@@ -842,7 +1175,7 @@ function renderProductPage(product, inventory) {
       </footer>
       <div class="copyright">Copyright 2026 - PeaceJewel.com All rights reserved</div>
     </main>
-    <script>window.__PEACEJEWEL_API_BASE__ = ${JSON.stringify(apiBaseUrl)};</script>
+    <script>window.__PEACEJEWEL_API_BASE__ = ${JSON.stringify(clientApiBaseUrl)};</script>
     <script src="/menu.js"></script>
     <script src="/store.js"></script>
   </body>
@@ -920,9 +1253,9 @@ function shareCollection(left, right) {
 }
 
 async function loadInventorySnapshot() {
-  if (apiBaseUrl) {
+  if (serverApiBaseUrl) {
     try {
-      const response = await fetch(`${apiBaseUrl}/inventory`);
+      const response = await fetch(`${serverApiBaseUrl}/inventory`);
       if (response.ok) {
         const inventory = await response.json();
         if (Array.isArray(inventory)) {
@@ -939,6 +1272,22 @@ async function loadInventorySnapshot() {
       return parsed.map(normalizeInventoryItem);
     }
   } catch {}
+
+  return [];
+}
+
+async function loadOrdersSnapshot() {
+  if (serverApiBaseUrl) {
+    try {
+      const response = await fetch(`${serverApiBaseUrl}/orders`);
+      if (response.ok) {
+        const orders = await response.json();
+        if (Array.isArray(orders)) {
+          return orders.map(normalizeOrder);
+        }
+      }
+    } catch {}
+  }
 
   return [];
 }
@@ -975,6 +1324,10 @@ function normalizeList(value, fallback = []) {
   }
 
   return structuredClone(fallback);
+}
+
+function normalizeText(value) {
+  return String(value || "").trim().toLowerCase();
 }
 
 function formatMoney(cents) {

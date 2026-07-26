@@ -192,34 +192,5 @@
     ],
     "benefitPrimaryText": "A textured woven bracelet with a stronger, modern silhouette. that feels effortless to wear and easy to style every day.",
     "benefitSecondaryText": "Perfect for daily wear, layering, and keeping your look polished without trying too hard."
-  },
-  {
-    "id": "PJ-004",
-    "sku": "PJ-RNG-003",
-    "slug": "black-coral-ring",
-    "name": "Black Coral Ring",
-    "category": "Rings",
-    "description": "A bold ring with refined contrast and premium everyday appeal.",
-    "imageUrl": "/assets/Vector(3).png",
-    "priceCents": 32029,
-    "stock": 0,
-    "status": "Out of Stock",
-    "active": true,
-    "sizes": [
-      "S",
-      "M",
-      "L"
-    ],
-    "colors": [
-      "Gold",
-      "Black"
-    ],
-    "collections": [
-      "new-arrivals",
-      "mens-collection",
-      "best-sellers"
-    ],
-    "benefitPrimaryText": "",
-    "benefitSecondaryText": ""
   }
 ]

@@ -8,6 +8,7 @@ services:
       - .env
     environment:
       PORT: "3000"
+      API_INTERNAL_URL: http://api:4000
     ports:
       - "3000:3000"
     volumes:
@@ -27,6 +28,8 @@ services:
       - .env
     environment:
       PORT: "4000"
+      DATABASE_URL: postgresql://peacejewel:peacejewel@postgres:5432/peacejewel?schema=public
+      REDIS_URL: redis://redis:6379
     ports:
       - "4000:4000"
     volumes:

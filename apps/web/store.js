@@ -85,6 +85,7 @@
 
   document.addEventListener("click", handleDocumentClick);
   document.addEventListener("submit", handleDocumentSubmit);
+  document.addEventListener("input", handleDocumentInput);
   document.addEventListener("change", handleDocumentChange);
   window.addEventListener("storage", handleStorageEvent);
 
@@ -182,6 +183,18 @@
         return;
       }
 
+      if (actionButton.matches("[data-admin-delete-id]")) {
+        event.preventDefault();
+        void deleteInventoryItem(actionButton.dataset.adminDeleteId);
+        return;
+      }
+
+      if (actionButton.matches("[data-admin-inventory-filter]")) {
+        event.preventDefault();
+        setAdminInventoryFilter(actionButton.dataset.adminInventoryFilter);
+        return;
+      }
+
       if (actionButton.matches("[data-catalog-confirm]")) {
         event.preventDefault();
         confirmCatalogSelection(actionButton);
@@ -226,6 +239,15 @@
       }
     }
 
+    const adminCard = event.target.closest("[data-admin-card-href]");
+    if (adminCard && !event.target.closest("button, a, input, select, textarea")) {
+      const href = adminCard.dataset.adminCardHref;
+      if (href) {
+        window.location.assign(href);
+      }
+      return;
+    }
+
     const adminRow = event.target.closest(".admin-table__row[data-admin-id]");
     if (adminRow && !event.target.closest("[data-stock-action]") && !event.target.closest(".admin-row-action")) {
       event.preventDefault();
@@ -243,6 +265,12 @@
   }
 
   function handleDocumentSubmit(event) {
+    if (event.target.matches(".admin-inventory-search")) {
+      event.preventDefault();
+      navigateInventorySearch(event.target);
+      return;
+    }
+
     if (event.target.matches(".newsletter-form")) {
       event.preventDefault();
       showToast("Thanks — you’re on the list.");
@@ -309,6 +337,39 @@
       if (urlField) urlField.value = pendingImageUpload.dataUrl;
     };
     reader.readAsDataURL(file);
+  }
+
+  function handleDocumentInput(event) {
+    const target = event.target;
+    if (!target.matches(".admin-inventory-search input[type=\"search\"]")) return;
+
+    const form = target.closest(".admin-inventory-search");
+    if (!form) return;
+
+    window.clearTimeout(form.__searchTimer);
+    form.__searchTimer = window.setTimeout(() => {
+      navigateInventorySearch(form);
+    }, 220);
+  }
+
+  function navigateInventorySearch(form) {
+    const action = form.getAttribute("action") || "/admin/inventory";
+    const url = new URL(action, window.location.origin);
+    const filter = String(form.querySelector('input[name="filter"]')?.value || "all").trim() || "all";
+    const query = String(form.querySelector('input[name="q"]')?.value || "").trim();
+
+    url.searchParams.set("filter", filter);
+    if (query) {
+      url.searchParams.set("q", query);
+    } else {
+      url.searchParams.delete("q");
+    }
+
+    const current = `${window.location.pathname}${window.location.search}`;
+    const next = `${url.pathname}${url.search}`;
+    if (current !== next) {
+      window.location.assign(next);
+    }
   }
 
   async function hydrateInventoryFromApi() {
@@ -687,6 +748,7 @@
     }
 
     syncSelectedAdminRow();
+    applyAdminInventoryFilter(document.querySelector("[data-admin-inventory-filter].is-active")?.dataset.adminInventoryFilter || "all");
   }
 
   function renderCartItem(item) {
@@ -1254,6 +1316,12 @@
   async function deleteSelectedInventoryItem() {
     const item = getSelectedInventoryItem();
     if (!item) return;
+    await deleteInventoryItem(item.id);
+  }
+
+  async function deleteInventoryItem(itemId) {
+    const item = state.inventory.find((entry) => entry.id === itemId);
+    if (!item) return;
 
     try {
       await fetch(`${API_BASE}/inventory/${encodeURIComponent(item.id)}`, { method: "DELETE" });
@@ -1263,7 +1331,7 @@
 
     state.inventory = state.inventory.filter((entry) => entry.id !== item.id);
     state.selectedInventoryId = state.inventory[0]?.id || null;
-    persistInventory();
+    await persistInventory();
     renderAdminPage();
     renderStorefrontPages();
     showToast("Product deleted.");
@@ -1290,6 +1358,33 @@
     rows.forEach((row) => {
       row.classList.toggle("admin-table__row--selected", row.dataset.adminId === state.selectedInventoryId);
     });
+  }
+
+  function setAdminInventoryFilter(filterName) {
+    const normalizedFilter = String(filterName || "all");
+    const buttons = document.querySelectorAll("[data-admin-inventory-filter]");
+    buttons.forEach((button) => {
+      button.classList.toggle("is-active", button.dataset.adminInventoryFilter === normalizedFilter);
+    });
+    applyAdminInventoryFilter(normalizedFilter);
+  }
+
+  function applyAdminInventoryFilter(filterName) {
+    const normalizedFilter = String(filterName || "all");
+    const rows = document.querySelectorAll(".admin-table__row[data-admin-inventory-state]");
+    rows.forEach((row) => {
+      const rowState = row.dataset.adminInventoryState || "active";
+      const visible =
+        normalizedFilter === "all" ||
+        rowState === normalizedFilter;
+      row.hidden = !visible;
+    });
+
+    const emptyState = document.querySelector(".admin-table__empty");
+    if (emptyState) {
+      const visibleRows = Array.from(rows).some((row) => !row.hidden);
+      emptyState.hidden = visibleRows;
+    }
   }
 
   function getSelectedInventoryItem() {

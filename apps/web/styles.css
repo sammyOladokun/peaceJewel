@@ -70,6 +70,18 @@ button, input { font: inherit; }
   position: relative;
 }
 
+.site-nav--inventory {
+  flex: 1;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: .55rem;
+}
+
+.site-nav--inventory .admin-inventory-filter {
+  font-size: .82rem;
+  padding: .55rem .85rem;
+}
+
 .site-nav__link--dropdown {
   display: inline-flex;
   align-items: center;
@@ -1001,6 +1013,62 @@ button, input { font: inherit; }
   justify-content: flex-end;
 }
 
+.admin-toolbar__actions--inventory {
+  align-items: center;
+}
+
+.admin-inventory-search {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  flex-wrap: wrap;
+}
+
+.admin-inventory-search__field {
+  display: block;
+}
+
+.admin-inventory-search__field input[type="search"] {
+  min-width: min(24rem, 100%);
+  padding: .7rem .95rem;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.22);
+  color: var(--text);
+  outline: none;
+}
+
+.admin-inventory-search--header {
+  display: none;
+  flex: 1 1 18rem;
+  justify-content: flex-end;
+}
+
+.admin-inventory-search--header .admin-inventory-search__field input[type="search"] {
+  min-width: min(18rem, 100%);
+  width: 18rem;
+}
+
+.admin-inventory-search__field input[type="search"]:focus {
+  border-color: rgba(32, 26, 23, 0.28);
+  box-shadow: 0 0 0 3px rgba(109, 106, 103, 0.1);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.site-actions .admin-inventory-search--header {
+  margin-right: .35rem;
+}
+
 .admin-stats {
   max-width: 1220px;
   margin: 0 auto;
@@ -1050,6 +1118,24 @@ button, input { font: inherit; }
   padding: 1.5rem;
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.12);
+}
+
+.admin-card--linked {
+  position: relative;
+  cursor: pointer;
+  transition: transform .2s ease, border-color .2s ease, background-color .2s ease;
+}
+
+.admin-card--linked:hover,
+.admin-card--linked:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(32, 26, 23, 0.18);
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.admin-card--linked:focus-visible {
+  outline: 2px solid rgba(109, 106, 103, 0.28);
+  outline-offset: 2px;
 }
 
 .admin-card__heading {
@@ -1124,6 +1210,63 @@ button, input { font: inherit; }
   color: var(--muted);
 }
 
+.admin-table--flat {
+  padding: 0;
+}
+
+.admin-inventory-page {
+  max-width: 1220px;
+  margin: 0 auto;
+  padding: 0 1.5rem 4rem;
+}
+
+.admin-inventory-page__heading {
+  margin-bottom: 1.35rem;
+}
+
+.admin-inventory-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .65rem;
+  margin-bottom: 1.25rem;
+}
+
+.admin-inventory-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  padding: .65rem .95rem;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.14);
+  color: var(--text);
+  cursor: pointer;
+  transition: background-color .2s ease, border-color .2s ease, transform .2s ease;
+}
+
+.admin-inventory-filter::after {
+  content: attr(data-filter-count);
+  min-width: 1.5rem;
+  height: 1.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(109, 106, 103, 0.12);
+  color: var(--muted);
+  font-size: .78rem;
+}
+
+.admin-inventory-filter:hover,
+.admin-inventory-filter:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(32, 26, 23, 0.18);
+}
+
+.admin-inventory-filter.is-active {
+  background: rgba(109, 106, 103, 0.12);
+  border-color: rgba(109, 106, 103, 0.28);
+}
+
 .admin-table__row {
   display: grid;
   grid-template-columns: minmax(0, 2.1fr) auto auto auto auto;
@@ -1153,10 +1296,13 @@ button, input { font: inherit; }
 }
 
 .admin-product img {
-  width: 58px;
-  height: 58px;
+  width: 62px;
+  height: 62px;
   object-fit: contain;
   flex: none;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.24);
+  padding: .35rem;
 }
 
 .admin-product strong,
@@ -1175,6 +1321,25 @@ button, input { font: inherit; }
 .admin-row-action {
   justify-self: end;
   white-space: nowrap;
+}
+
+.admin-row-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .55rem;
+}
+
+.admin-row-action--danger {
+  width: 2.65rem;
+  height: 2.65rem;
+  padding: 0;
+  justify-content: center;
+}
+
+.admin-row-action--danger svg {
+  width: 1rem;
+  height: 1rem;
 }
 
 .admin-badge {
@@ -1385,6 +1550,10 @@ button, input { font: inherit; }
   gap: .7rem;
 }
 
+.admin-order-list--flat {
+  margin-top: 0;
+}
+
 .admin-order-item {
   display: flex;
   justify-content: space-between;
@@ -1430,9 +1599,17 @@ button, input { font: inherit; }
   padding: 0 1.5rem 4rem;
 }
 
-.admin-editor__card {
-  max-width: 960px;
-  margin: 0 auto;
+.admin-editor--flat {
+  display: grid;
+  gap: 1.35rem;
+}
+
+.admin-editor__heading {
+  align-items: flex-end;
+}
+
+.admin-form--flat {
+  max-width: none;
 }
 
 .admin-list {
@@ -1441,6 +1618,10 @@ button, input { font: inherit; }
   padding: 0;
   display: grid;
   gap: .85rem;
+}
+
+.admin-list--flat {
+  margin-top: 0;
 }
 
 .admin-list li {
@@ -2045,6 +2226,16 @@ button, input { font: inherit; }
     box-shadow: 0 20px 40px rgba(32, 26, 23, 0.08);
     z-index: 19;
   }
+
+  .site-nav--inventory {
+    justify-content: flex-start;
+  }
+
+  .site-nav--inventory .admin-inventory-filter {
+    width: 100%;
+    justify-content: space-between;
+  }
+
   .site-nav__toggle {
     width: 100%;
     display: inline-flex;
@@ -2088,6 +2279,14 @@ button, input { font: inherit; }
 @media (min-width: 769px) {
   .site-menu-button {
     display: none !important;
+  }
+
+  .admin-inventory-search--header {
+    display: flex;
+  }
+
+  .admin-inventory-search--toolbar {
+    display: none;
   }
 }
 
@@ -2464,6 +2663,10 @@ button, input { font: inherit; }
     align-items: flex-start;
   }
 
+  .admin-card--linked {
+    -webkit-tap-highlight-color: transparent;
+  }
+
   .admin-page-nav {
     padding-left: 1rem;
     padding-right: 1rem;
@@ -2516,6 +2719,31 @@ button, input { font: inherit; }
 
   .admin-toolbar__actions {
     justify-content: flex-start;
+  }
+
+  .admin-inventory-search--header {
+    display: none !important;
+  }
+
+  .admin-toolbar__actions--inventory {
+    width: 100%;
+  }
+
+  .admin-inventory-search {
+    width: 100%;
+  }
+
+  .admin-inventory-search__field {
+    flex: 1 1 100%;
+  }
+
+  .admin-inventory-search__field input[type="search"] {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .admin-inventory-search--toolbar {
+    display: flex;
   }
 
   .page-contact {
