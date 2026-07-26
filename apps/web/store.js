@@ -614,7 +614,7 @@
     const adminGrid = document.querySelector(".admin-grid");
     if (!adminGrid) return;
 
-    const table = document.querySelector(".admin-table");
+    const tableBody = document.querySelector(".admin-table__body");
     const stats = Array.from(document.querySelectorAll(".admin-stat strong"));
     const alertsList = document.querySelector(".admin-list");
     const ordersList = document.querySelector("[data-admin-orders-list]");
@@ -634,17 +634,8 @@
       state.selectedInventoryId = state.inventory[0]?.id || null;
     }
 
-    if (table) {
-      table.innerHTML = [
-        `<div class="admin-table__row admin-table__row--head">
-          <span>Product</span>
-          <span>Status</span>
-          <span>Stock</span>
-          <span>Price</span>
-          <span>Edit</span>
-        </div>`,
-        ...state.inventory.map(renderAdminRow)
-      ].join("");
+    if (tableBody) {
+      tableBody.innerHTML = state.inventory.map(renderAdminRow).join("");
     }
 
     if (stats.length >= 4) {
@@ -1161,10 +1152,9 @@
       state.inventory.unshift(item);
       state.selectedInventoryId = item.id;
       pendingImageUpload = null;
-      persistInventory();
+      await persistInventory();
       renderAdminPage();
       renderStorefrontPages();
-      showToast("Inventory item added.");
       window.location.assign("/admin");
       return;
     }
@@ -1173,10 +1163,10 @@
 
     Object.assign(existingItem, item);
     pendingImageUpload = null;
-    persistInventory();
+    await persistInventory();
     renderAdminPage();
     renderStorefrontPages();
-    showToast("Inventory item updated.");
+    window.location.assign("/admin");
   }
 
   async function resolveAdminImage(fields, item, editorMode = "edit") {
@@ -1622,11 +1612,11 @@
     return cartId;
   }
 
-  function persistInventory() {
+  async function persistInventory() {
     const normalized = state.inventory.map(normalizeInventoryRecord);
     state.inventory = normalized;
     persistInventoryCache();
-    void syncInventoryToApi(normalized);
+    await syncInventoryToApi(normalized);
   }
 
   function persistInventoryCache() {

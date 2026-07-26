@@ -116,6 +116,18 @@ const server = http.createServer((request, response) => {
     return;
   }
 
+  if (requestPath === "/admin/inventory") {
+    if (!isAdminAuthenticated(request.headers.cookie)) {
+      response.writeHead(302, { Location: "/admin-login" });
+      response.end();
+      return;
+    }
+
+    response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+    response.end(renderAdminInventoryPage(loadInventorySnapshot()));
+    return;
+  }
+
   if (requestPath === "/admin") {
     if (!isAdminAuthenticated(request.headers.cookie)) {
       response.writeHead(302, { Location: "/admin-login" });
@@ -287,6 +299,7 @@ function renderAdminEditorPage(mode, item) {
   const selectedCategory = String(item.category || "Rings");
   const benefitPrimary = String(item.benefitPrimaryText || "").trim() || getBenefitCards(item).primary;
   const benefitSecondary = String(item.benefitSecondaryText || "").trim() || getBenefitCards(item).secondary;
+  const previewImage = String(item.image || item.imageUrl || "").trim();
   const title = isAddMode ? "Add Product" : "Edit Product";
   const heading = isAddMode ? "Add a new item." : "Edit this item.";
   const note = isAddMode
@@ -353,7 +366,7 @@ function renderAdminEditorPage(mode, item) {
             <label class="admin-field admin-field--full">
               <span>Product Image</span>
               <div class="admin-image-picker">
-                <img class="admin-image-picker__preview" alt="Selected product preview" data-admin-preview="image" />
+                <img class="admin-image-picker__preview" alt="Selected product preview" data-admin-preview="image"${previewImage ? ` src="${escapeHtml(previewImage)}"` : ""} />
                 <div class="admin-image-picker__controls">
                   <input type="file" accept="image/*" data-admin-field="imageFile" />
                   <input type="url" placeholder="Image URL" value="${escapeHtml(isAddMode ? "" : item.image || item.imageUrl || "")}" data-admin-field="imageUrl" />
@@ -433,6 +446,86 @@ function renderAdminEditorPage(mode, item) {
       </section>
     </main>
     <script>window.__PEACEJEWEL_API_BASE__ = ${JSON.stringify((process.env.NEXT_PUBLIC_API_URL || process.env.API_BASE_URL || "").replace(/\/+$/, ""))};</script>
+    <script src="/menu.js"></script>
+    <script src="/store.js"></script>
+  </body>
+  </html>`;
+}
+
+function renderAdminInventoryPage(inventory) {
+  const rows = inventory.length
+    ? inventory.map(renderAdminRow).join("")
+    : `<div class="admin-table__empty">No inventory items yet.</div>`;
+
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PeaceJewel Admin — Inventory List</title>
+    <meta name="description" content="PeaceJewel admin inventory list page." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="site-header__inner">
+        <a class="site-brand" href="/">PeaceJewel</a>
+        <nav class="site-nav" id="site-nav">
+          <a href="/admin">Dashboard</a>
+          <a href="/admin/add">Add Product</a>
+          <a href="/catalog">View Store</a>
+        </nav>
+        <div class="site-actions" aria-label="Utilities">
+          <button class="icon-button site-menu-button" type="button" aria-label="Menu" aria-expanded="false" aria-controls="site-nav">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="landing-shell shop-shell admin-shell">
+      <section class="shop-toolbar admin-toolbar">
+        <div>
+          <p class="eyebrow">Inventory List</p>
+          <h2>All store products.</h2>
+          <p class="admin-toolbar__note">Browse every stored product, jump into editing, or return to the dashboard overview.</p>
+        </div>
+        <div class="admin-toolbar__actions">
+          <a class="button button--ghost" href="/admin">Back to dashboard</a>
+          <a class="button button--dark" href="/admin/add">Add Product</a>
+        </div>
+      </section>
+
+      <section class="admin-editor admin-inventory-page">
+        <section class="admin-card admin-editor__card">
+          <div class="admin-card__heading">
+            <div>
+              <p class="eyebrow">Inventory List</p>
+              <h3>${inventory.length ? `${inventory.length} products available` : "No products yet"}</h3>
+            </div>
+            <div class="admin-card__heading-actions">
+              <div class="admin-card__meta">${inventory.length ? "Click Edit on any row to update it." : "Add your first product to begin."}</div>
+            </div>
+          </div>
+
+          <div class="admin-table">
+            <div class="admin-table__row admin-table__row--head">
+              <span>Product</span>
+              <span>Status</span>
+              <span>Stock</span>
+              <span>Price</span>
+              <span>Edit</span>
+            </div>
+            <div class="admin-table__body">
+              ${rows}
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
     <script src="/menu.js"></script>
     <script src="/store.js"></script>
   </body>
