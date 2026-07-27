@@ -586,7 +586,7 @@ function renderAdminInventoryRow(item) {
   const imageUrl = String(item.imageUrl || item.image || "/assets/Vector.png");
   const stockState = item.stock <= 0 ? "out" : item.stock <= 5 ? "low" : "active";
 
-  return `<div class="admin-table__row" data-admin-id="${escapeHtml(item.id)}" data-admin-inventory-state="${stockState}" data-admin-inventory-category="${escapeHtml(slugify(item.category || "products"))}">
+  return `<div class="admin-table__row" data-admin-id="${escapeHtml(item.id)}" data-admin-inventory-state="${stockState}" data-admin-inventory-category="${escapeHtml(slugify(item.category || "products"))}" data-admin-search="${escapeHtml(`${item.name || ""} ${item.sku || ""} ${item.category || ""}`.toLowerCase())}">
     <div class="admin-product">
       <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(item.name)}" />
       <div>

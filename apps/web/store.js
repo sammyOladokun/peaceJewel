@@ -276,7 +276,7 @@
   function handleDocumentSubmit(event) {
     if (event.target.matches(".admin-inventory-search")) {
       event.preventDefault();
-      navigateInventorySearch(event.target);
+      syncAdminInventorySearch(event.target);
       return;
     }
 
@@ -357,15 +357,17 @@
 
     window.clearTimeout(form.__searchTimer);
     form.__searchTimer = window.setTimeout(() => {
-      navigateInventorySearch(form);
-    }, 220);
+      syncAdminInventorySearch(form, { updateHistory: true });
+    }, 120);
   }
 
-  function navigateInventorySearch(form) {
+  function syncAdminInventorySearch(form, options = {}) {
+    const { updateHistory = false } = options;
     const action = form.getAttribute("action") || "/admin/inventory";
     const url = new URL(action, window.location.origin);
     const filter = String(form.querySelector('input[name="filter"]')?.value || "all").trim() || "all";
     const query = String(form.querySelector('input[name="q"]')?.value || "").trim();
+    const normalizedQuery = normalizeText(query).toLowerCase();
 
     url.searchParams.set("filter", filter);
     if (query) {
@@ -374,11 +376,26 @@
       url.searchParams.delete("q");
     }
 
-    const current = `${window.location.pathname}${window.location.search}`;
-    const next = `${url.pathname}${url.search}`;
-    if (current !== next) {
-      window.location.assign(next);
+    if (updateHistory) {
+      const current = `${window.location.pathname}${window.location.search}`;
+      const next = `${url.pathname}${url.search}`;
+      if (current !== next) {
+        window.history.replaceState({}, "", next);
+      }
     }
+
+    syncAdminInventorySearchFields(query, filter);
+    applyAdminInventoryFilter(filter, normalizedQuery);
+  }
+
+  function syncAdminInventorySearchFields(query, filter) {
+    document.querySelectorAll('.admin-inventory-search input[name="q"]').forEach((input) => {
+      if (input.value !== query) input.value = query;
+    });
+
+    document.querySelectorAll('.admin-inventory-search input[name="filter"]').forEach((input) => {
+      if (input.value !== filter) input.value = filter;
+    });
   }
 
   async function hydrateInventoryFromApi() {
@@ -757,7 +774,10 @@
     }
 
     syncSelectedAdminRow();
-    applyAdminInventoryFilter(document.querySelector("[data-admin-inventory-filter].is-active")?.dataset.adminInventoryFilter || "all");
+    applyAdminInventoryFilter(
+      document.querySelector("[data-admin-inventory-filter].is-active")?.dataset.adminInventoryFilter || "all",
+      getAdminInventorySearchQuery()
+    );
   }
 
   function renderCartItem(item) {
@@ -1375,18 +1395,21 @@
     buttons.forEach((button) => {
       button.classList.toggle("is-active", button.dataset.adminInventoryFilter === normalizedFilter);
     });
-    applyAdminInventoryFilter(normalizedFilter);
+    applyAdminInventoryFilter(normalizedFilter, getAdminInventorySearchQuery());
   }
 
-  function applyAdminInventoryFilter(filterName) {
+  function applyAdminInventoryFilter(filterName, searchTerm = "") {
     const normalizedFilter = String(filterName || "all");
+    const normalizedSearch = normalizeText(searchTerm).toLowerCase();
     const rows = document.querySelectorAll(".admin-table__row[data-admin-inventory-state]");
     rows.forEach((row) => {
       const rowState = row.dataset.adminInventoryState || "active";
+      const searchableText = String(row.dataset.adminSearch || row.textContent || "").toLowerCase();
       const visible =
         normalizedFilter === "all" ||
         rowState === normalizedFilter;
-      row.hidden = !visible;
+      const matchesSearch = !normalizedSearch || searchableText.includes(normalizedSearch);
+      row.hidden = !(visible && matchesSearch);
     });
 
     const emptyState = document.querySelector(".admin-table__empty");
@@ -1394,6 +1417,14 @@
       const visibleRows = Array.from(rows).some((row) => !row.hidden);
       emptyState.hidden = visibleRows;
     }
+  }
+
+  function getAdminInventorySearchQuery() {
+    return String(
+      document.querySelector('.admin-inventory-search input[name="q"]')?.value ||
+      new URL(window.location.href).searchParams.get("q") ||
+      ""
+    );
   }
 
   function getSelectedInventoryItem() {

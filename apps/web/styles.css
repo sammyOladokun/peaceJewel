@@ -2448,6 +2448,20 @@ button, input { font: inherit; }
     justify-self: stretch;
   }
 
+  .shop-product__popover {
+    position: absolute;
+    inset: 0;
+    padding: .5rem;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  .shop-product__popover-panel {
+    max-width: 100%;
+    max-height: 100%;
+    overflow: auto;
+  }
+
   .site-header__inner {
     padding-left: 1rem;
     padding-right: 1rem;
