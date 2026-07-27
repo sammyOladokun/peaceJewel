@@ -1067,11 +1067,12 @@ function renderCategoryPage(page, inventory) {
 }
 
 function renderProductCard(product, label) {
-  return `<article class="shop-product shop-product--carousel" data-product-slug="${escapeHtml(product.slug || product.id)}">
+  const detailHref = `/product?slug=${encodeURIComponent(product.slug || product.id)}`;
+  return `<article class="shop-product shop-product--carousel" data-product-slug="${escapeHtml(product.slug || product.id)}" data-product-card-href="${escapeHtml(detailHref)}">
             <img class="shop-product__image" src="${escapeHtml(product.imageUrl || product.image || "/assets/Vector.png")}" alt="${escapeHtml(product.name)}" />
             <h3>${escapeHtml(product.name)}</h3>
             <div class="shop-product__meta"><span>Price</span><strong>${escapeHtml(formatMoney(product.priceCents))}</strong></div>
-            <a class="shop-product__details" href="/product?slug=${encodeURIComponent(product.slug)}">View Details</a>
+            <a class="shop-product__details" href="${detailHref}">View Details</a>
             <button class="button button--dark" type="button" data-catalog-add>Add To Cart</button>
             <div class="shop-product__popover" hidden></div>
           </article>`;

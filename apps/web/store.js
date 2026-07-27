@@ -239,6 +239,15 @@
       }
     }
 
+    const productCard = event.target.closest("[data-product-card-href]");
+    if (productCard && !event.target.closest("button, a, input, select, textarea")) {
+      const href = productCard.dataset.productCardHref;
+      if (href) {
+        window.location.assign(href);
+      }
+      return;
+    }
+
     const adminCard = event.target.closest("[data-admin-card-href]");
     if (adminCard && !event.target.closest("button, a, input, select, textarea")) {
       const href = adminCard.dataset.adminCardHref;
@@ -570,7 +579,7 @@
 
   function renderCatalogProductCard(product, label) {
     const detailHref = `/product?slug=${encodeURIComponent(product.slug || product.id)}`;
-    return `<article class="shop-product shop-product--carousel" data-product-slug="${escapeHtml(product.slug || product.id)}">
+    return `<article class="shop-product shop-product--carousel" data-product-slug="${escapeHtml(product.slug || product.id)}" data-product-card-href="${escapeHtml(detailHref)}">
       <img class="shop-product__image" src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)}" />
       <h3>${escapeHtml(product.name)}</h3>
       <div class="shop-product__meta"><span>Price</span><strong>${formatMoney(product.priceCents)}</strong></div>
@@ -662,7 +671,7 @@
 
   function renderRelatedProductCard(product) {
     const detailHref = `/product?slug=${encodeURIComponent(product.slug || product.id)}`;
-    return `<article class="shop-product">
+    return `<article class="shop-product" data-product-card-href="${escapeHtml(detailHref)}">
       <img class="shop-product__image" src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)}" />
       <h3>${escapeHtml(product.name)}</h3>
       <div class="shop-product__meta"><span>Price</span><strong>${formatMoney(product.priceCents)}</strong></div>
