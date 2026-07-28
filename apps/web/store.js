@@ -88,6 +88,8 @@
   document.addEventListener("input", handleDocumentInput);
   document.addEventListener("change", handleDocumentChange);
   window.addEventListener("storage", handleStorageEvent);
+  window.addEventListener("scroll", handleViewportChange, { passive: true });
+  window.addEventListener("resize", handleViewportChange);
 
   function init() {
     state.inventory = state.inventory.map(normalizeInventoryRecord);
@@ -130,6 +132,28 @@
       state.orders = readJson(STORAGE_KEYS.orders, []);
       renderAdminPage();
     }
+  }
+
+  function handleViewportChange() {
+    if (!state.activeCatalogSlug) return;
+    const card = Array.from(document.querySelectorAll(".shop-product[data-product-slug]")).find(
+      (item) => item.dataset.productSlug === state.activeCatalogSlug
+    );
+    const popover = card?.querySelector(".shop-product__popover");
+    if (!card || !popover || popover.hidden) return;
+    if (!isMobileCatalogPopover()) {
+      clearCatalogPopoverStyles(popover);
+      return;
+    }
+
+    const rect = card.getBoundingClientRect();
+    const isOutOfView = rect.bottom < 0 || rect.top > window.innerHeight;
+    if (isOutOfView) {
+      closeCatalogPopover();
+      return;
+    }
+
+    positionMobileCatalogPopover(card, popover);
   }
 
   function handleDocumentClick(event) {
@@ -964,6 +988,11 @@
     popover.hidden = false;
     card.classList.add("shop-product--popover-open");
     popover.innerHTML = renderCatalogPopover(product, selection);
+    if (isMobileCatalogPopover()) {
+      positionMobileCatalogPopover(card, popover);
+    } else {
+      clearCatalogPopoverStyles(popover);
+    }
   }
 
   function closeCatalogPopover() {
@@ -974,9 +1003,46 @@
       if (popover) {
         popover.hidden = true;
         popover.innerHTML = "";
+        clearCatalogPopoverStyles(popover);
       }
     });
     state.activeCatalogSlug = "";
+  }
+
+  function isMobileCatalogPopover() {
+    return window.matchMedia("(max-width: 768px)").matches;
+  }
+
+  function positionMobileCatalogPopover(card, popover) {
+    const rect = card.getBoundingClientRect();
+    const viewportPadding = 8;
+    const width = Math.min(rect.width, window.innerWidth - viewportPadding * 2);
+    const left = Math.max(viewportPadding, Math.min(rect.left, window.innerWidth - width - viewportPadding));
+    const top = Math.max(viewportPadding, rect.top);
+
+    popover.style.position = "fixed";
+    popover.style.inset = "auto";
+    popover.style.top = `${top}px`;
+    popover.style.left = `${left}px`;
+    popover.style.width = `${width}px`;
+    popover.style.maxWidth = `${width}px`;
+    popover.style.height = "auto";
+    popover.style.maxHeight = "none";
+    popover.style.overflow = "visible";
+    popover.style.zIndex = "30";
+  }
+
+  function clearCatalogPopoverStyles(popover) {
+    popover.style.position = "";
+    popover.style.inset = "";
+    popover.style.top = "";
+    popover.style.left = "";
+    popover.style.width = "";
+    popover.style.maxWidth = "";
+    popover.style.height = "";
+    popover.style.maxHeight = "";
+    popover.style.overflow = "";
+    popover.style.zIndex = "";
   }
 
   function updateCatalogPopoverSelection(target) {

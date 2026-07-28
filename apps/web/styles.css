@@ -2449,17 +2449,13 @@ button, input { font: inherit; }
   }
 
   .shop-product__popover {
-    position: absolute;
-    inset: 0;
     padding: .5rem;
-    align-items: center;
-    overflow: hidden;
+    align-items: flex-start;
+    justify-content: flex-start;
   }
 
   .shop-product__popover-panel {
-    max-width: 100%;
-    max-height: 100%;
-    overflow: auto;
+    max-width: min(100%, 22rem);
   }
 
   .site-header__inner {
