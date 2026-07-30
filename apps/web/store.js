@@ -300,7 +300,7 @@
   function handleDocumentSubmit(event) {
     if (event.target.matches(".admin-inventory-search")) {
       event.preventDefault();
-      syncAdminInventorySearch(event.target);
+      syncAdminInventorySearch(event.target, { navigate: true });
       return;
     }
 
@@ -386,7 +386,7 @@
   }
 
   function syncAdminInventorySearch(form, options = {}) {
-    const { updateHistory = false } = options;
+    const { updateHistory = false, navigate = false } = options;
     const action = form.getAttribute("action") || "/admin/inventory";
     const url = new URL(action, window.location.origin);
     const filter = String(form.querySelector('input[name="filter"]')?.value || "all").trim() || "all";
@@ -400,26 +400,20 @@
       url.searchParams.delete("q");
     }
 
+    const next = `${url.pathname}${url.search}`;
+    if (navigate) {
+      window.location.assign(next);
+      return;
+    }
+
     if (updateHistory) {
       const current = `${window.location.pathname}${window.location.search}`;
-      const next = `${url.pathname}${url.search}`;
       if (current !== next) {
         window.history.replaceState({}, "", next);
       }
     }
 
-    syncAdminInventorySearchFields(query, filter);
     applyAdminInventoryFilter(filter, normalizedQuery);
-  }
-
-  function syncAdminInventorySearchFields(query, filter) {
-    document.querySelectorAll('.admin-inventory-search input[name="q"]').forEach((input) => {
-      if (input.value !== query) input.value = query;
-    });
-
-    document.querySelectorAll('.admin-inventory-search input[name="filter"]').forEach((input) => {
-      if (input.value !== filter) input.value = filter;
-    });
   }
 
   async function hydrateInventoryFromApi() {

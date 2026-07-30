@@ -32,19 +32,19 @@
   ],
   "CART-MS1RSYMGCX1KDG": [
     {
-      "id": "terent-white-diamond-s-gold",
-      "name": "Terent White Diamond",
-      "image": "/assets/Vector.png",
-      "priceCents": 323200,
-      "quantity": 4,
+      "id": "dey-play-na-s-gold",
+      "name": "Dey Play na",
+      "image": "http://localhost:4000/uploads/1784998769541-5-50.png",
+      "priceCents": 29900,
+      "quantity": 1,
       "variant": "S · Gold",
       "source": "/catalog"
     },
     {
-      "id": "new-product-s-gold",
-      "name": "New Product",
-      "image": "http://localhost:4000/uploads/1785000868109-7-1.png",
-      "priceCents": 676800,
+      "id": "terent-white-diamond-s-gold",
+      "name": "Terent White Diamond",
+      "image": "/assets/Vector.png",
+      "priceCents": 323200,
       "quantity": 2,
       "variant": "S · Gold",
       "source": "/catalog"
