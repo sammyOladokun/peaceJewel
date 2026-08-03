@@ -16,6 +16,7 @@ const checkoutHtml = fs.readFileSync(path.join(rootDir, "checkout.html"), "utf8"
 const adminHtml = fs.readFileSync(path.join(rootDir, "admin.html"), "utf8");
 const adminLoginHtml = fs.readFileSync(path.join(rootDir, "admin-login.html"), "utf8");
 const css = fs.readFileSync(path.join(rootDir, "styles.css"), "utf8");
+const homepageJs = fs.readFileSync(path.join(rootDir, "homepage.js"), "utf8");
 const menuJs = fs.readFileSync(path.join(rootDir, "menu.js"), "utf8");
 const storeJs = fs.readFileSync(path.join(rootDir, "store.js"), "utf8");
 const adminKey = process.env.ADMIN_KEY || "peacejewel-admin";
@@ -247,6 +248,12 @@ const server = http.createServer(async (request, response) => {
   if (requestPath === "/menu.js") {
     response.writeHead(200, { "Content-Type": "application/javascript; charset=utf-8" });
     response.end(menuJs);
+    return;
+  }
+
+  if (requestPath === "/homepage.js") {
+    response.writeHead(200, { "Content-Type": "application/javascript; charset=utf-8" });
+    response.end(homepageJs);
     return;
   }
 
