@@ -347,13 +347,13 @@ function renderAdminEditorPage(mode, item) {
     <meta name="description" content="PeaceJewel admin product form." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&family=Pinyon+Script&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
     <header class="site-header">
       <div class="site-header__inner">
-        <a class="site-brand" href="/">PeaceJewel</a>
+        <a class="site-brand" href="/" aria-label="PeaceJewel home">PJ</a>
         <nav class="site-nav" id="site-nav">
           <a href="/admin">Dashboard</a>
           <a href="/admin/inventory">Inventory</a>
@@ -505,13 +505,13 @@ function renderAdminInventoryPage(inventory, filterName = "all", searchTerm = ""
     <meta name="description" content="PeaceJewel admin inventory list page." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&family=Pinyon+Script&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
     <header class="site-header">
       <div class="site-header__inner">
-        <a class="site-brand" href="/">PeaceJewel</a>
+        <a class="site-brand" href="/" aria-label="PeaceJewel home">PJ</a>
         <nav class="site-nav site-nav--inventory" id="site-nav" aria-label="Inventory filters">
           <a class="admin-inventory-filter${activeFilter === "all" ? " is-active" : ""}" href="${escapeHtml(buildInventoryHref("all", normalizedSearch))}" data-filter-count="${counts.all}">All Product</a>
           <a class="admin-inventory-filter${activeFilter === "active" ? " is-active" : ""}" href="${escapeHtml(buildInventoryHref("active", normalizedSearch))}" data-filter-count="${counts.active}">Active SKUs</a>
@@ -709,13 +709,13 @@ function renderAdminOrdersPage(orders, inventory) {
     <meta name="description" content="PeaceJewel admin orders page." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&family=Pinyon+Script&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
     <header class="site-header">
       <div class="site-header__inner">
-        <a class="site-brand" href="/">PeaceJewel</a>
+        <a class="site-brand" href="/" aria-label="PeaceJewel home">PJ</a>
         <nav class="site-nav" id="site-nav">
           <a href="/admin">Dashboard</a>
           <a href="/admin/inventory">Inventory</a>
@@ -793,13 +793,13 @@ function renderAdminAlertsPage(alerts, inventory, orders) {
     <meta name="description" content="PeaceJewel admin alerts page." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&family=Pinyon+Script&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
     <header class="site-header">
       <div class="site-header__inner">
-        <a class="site-brand" href="/">PeaceJewel</a>
+        <a class="site-brand" href="/" aria-label="PeaceJewel home">PJ</a>
         <nav class="site-nav" id="site-nav">
           <a href="/admin">Dashboard</a>
           <a href="/admin/inventory">Inventory</a>
@@ -957,7 +957,7 @@ function wrapStorefrontPage(title, description, content) {
     <meta name="description" content="${escapeHtml(description)}" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&family=Pinyon+Script&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
@@ -1020,7 +1020,7 @@ function renderCategoryPage(page, inventory) {
     <meta name="description" content="${page.description}" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&family=Pinyon+Script&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
@@ -1108,7 +1108,7 @@ function renderProductPage(product, inventory) {
     <meta name="description" content="${escapeHtml(product.description || "PeaceJewel product detail page.")}" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Serif+JP:wght@400;500;600;700&family=Pinyon+Script&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
@@ -1186,7 +1186,7 @@ function renderProductPage(product, inventory) {
 function renderSiteHeader(currentPath) {
   return `<header class="site-header">
       <div class="site-header__inner">
-        <a class="site-brand" href="/">PeaceJewel</a>
+        <a class="site-brand" href="/" aria-label="PeaceJewel home">PJ</a>
         <nav class="site-nav" id="site-nav">
           <button class="site-nav__toggle site-nav__link--dropdown" type="button" aria-expanded="false" aria-controls="site-nav-categories">Categories <span class="site-nav__caret" aria-hidden="true"></span></button>
           <div class="site-nav__dropdown" id="site-nav-categories" aria-label="Categories">
