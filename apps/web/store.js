@@ -80,6 +80,7 @@
   };
 
   let pendingImageUpload = null;
+  let pendingImageUploadPromise = null;
 
   init();
 
@@ -357,19 +358,32 @@
     const file = target.files && target.files[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      pendingImageUpload = {
-        itemId: form?.dataset.adminId || state.selectedInventoryId || state.adminDraft?.id || null,
-        fileName: file.name,
-        mimeType: file.type || "image/png",
-        dataUrl: String(reader.result || "")
-      };
+    pendingImageUpload = null;
+    pendingImageUploadPromise = compressAdminImageFile(file)
+      .then((upload) => {
+        pendingImageUpload = {
+          itemId: form?.dataset.adminId || state.selectedInventoryId || state.adminDraft?.id || null,
+          ...upload
+        };
 
-      if (preview) preview.src = pendingImageUpload.dataUrl;
-      if (urlField) urlField.value = pendingImageUpload.dataUrl;
-    };
-    reader.readAsDataURL(file);
+        if (preview) preview.src = pendingImageUpload.dataUrl;
+        if (urlField) urlField.value = pendingImageUpload.dataUrl;
+        return pendingImageUpload;
+      })
+      .catch(() => {
+        return readAdminImageFile(file).then((dataUrl) => {
+          pendingImageUpload = {
+            itemId: form?.dataset.adminId || state.selectedInventoryId || state.adminDraft?.id || null,
+            fileName: file.name,
+            mimeType: file.type || "image/png",
+            dataUrl
+          };
+
+          if (preview) preview.src = pendingImageUpload.dataUrl;
+          if (urlField) urlField.value = pendingImageUpload.dataUrl;
+          return pendingImageUpload;
+        });
+      });
   }
 
   function handleDocumentInput(event) {
@@ -1327,6 +1341,10 @@
       return editorMode === "add" ? fallbackUrl || "" : fallbackUrl;
     }
 
+    if (pendingImageUploadPromise) {
+      await pendingImageUploadPromise.catch(() => null);
+    }
+
     const uploaded = await uploadAdminImage(pendingImageUpload).catch(() => null);
     return uploaded?.url || pendingImageUpload.dataUrl || fallbackUrl || "";
   }
@@ -1858,7 +1876,7 @@
   function normalizeInventoryRecord(item) {
     const stock = clampStock(item.stock);
     const rawImage = item.image || item.imageUrl || "/assets/Vector.png";
-    const image = rawImage.startsWith("/uploads/") ? `${API_BASE}${rawImage}` : rawImage;
+    const image = optimizeImageUrl(rawImage.startsWith("/uploads/") ? `${API_BASE}${rawImage}` : rawImage);
     const priceCents = Number.isFinite(Number(item.priceCents))
       ? Math.round(Number(item.priceCents))
       : parseMoney(item.price || 0);
@@ -1881,7 +1899,7 @@
     return {
       id: String(item.id || ""),
       name: String(item.name || "Product"),
-      image: String(item.image || item.imageUrl || "/assets/Vector.png"),
+      image: optimizeImageUrl(String(item.image || item.imageUrl || "/assets/Vector.png")),
       priceCents: Math.max(0, Math.round(Number(item.priceCents ?? item.price ?? 0))),
       quantity: Math.max(1, clampStock(item.quantity || 1)),
       variant: String(item.variant || ""),
@@ -1903,6 +1921,91 @@
       postalCode: String(formData.get("postalCode") || "").trim(),
       country: String(formData.get("country") || "").trim()
     };
+  }
+
+  async function readAdminImageFile(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = () => reject(reader.error || new Error("Unable to read image"));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function compressAdminImageFile(file) {
+    if (!file || !file.type.startsWith("image/")) {
+      return {
+        fileName: file?.name || `upload-${Date.now()}.png`,
+        mimeType: file?.type || "image/png",
+        dataUrl: await readAdminImageFile(file)
+      };
+    }
+
+    const originalDataUrl = await readAdminImageFile(file);
+    if (file.size < 300000) {
+      return {
+        fileName: file.name,
+        mimeType: file.type || "image/png",
+        dataUrl: originalDataUrl
+      };
+    }
+
+    const imageBitmap = await createImageBitmap(file);
+    const maxDimension = 1600;
+    const scale = Math.min(1, maxDimension / Math.max(imageBitmap.width || 1, imageBitmap.height || 1));
+    const width = Math.max(1, Math.round((imageBitmap.width || 1) * scale));
+    const height = Math.max(1, Math.round((imageBitmap.height || 1) * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d", { alpha: true });
+    if (!context) {
+      return {
+        fileName: file.name,
+        mimeType: file.type || "image/png",
+        dataUrl: originalDataUrl
+      };
+    }
+
+    context.drawImage(imageBitmap, 0, 0, width, height);
+
+    const webpDataUrl = await new Promise((resolve) => {
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          resolve(null);
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ""));
+        reader.onerror = () => resolve(null);
+        reader.readAsDataURL(blob);
+      }, "image/webp", 0.84);
+    });
+
+    return webpDataUrl
+      ? {
+          fileName: `${file.name.replace(/\.[^.]+$/, "")}.webp`,
+          mimeType: "image/webp",
+          dataUrl: webpDataUrl
+        }
+      : {
+          fileName: file.name,
+          mimeType: file.type || "image/png",
+          dataUrl: originalDataUrl
+        };
+  }
+
+  function optimizeImageUrl(url) {
+    const rawUrl = String(url || "").trim();
+    if (!rawUrl || rawUrl.startsWith("data:") || rawUrl.startsWith("/assets/") || rawUrl.startsWith("/uploads/")) {
+      return rawUrl;
+    }
+
+    if (!/^https?:\/\/res\.cloudinary\.com\//.test(rawUrl) || rawUrl.includes("/f_auto,q_84/")) {
+      return rawUrl;
+    }
+
+    return rawUrl.replace(/\/upload\/(?!f_auto,q_84\/)/, "/upload/f_auto,q_84/");
   }
 
   function applyCheckoutStatus() {

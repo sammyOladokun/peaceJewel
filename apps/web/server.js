@@ -344,7 +344,7 @@ function renderAdminEditorPage(mode, item) {
   const selectedCategory = String(item.category || "Rings");
   const benefitPrimary = String(item.benefitPrimaryText || "").trim() || getBenefitCards(item).primary;
   const benefitSecondary = String(item.benefitSecondaryText || "").trim() || getBenefitCards(item).secondary;
-  const previewImage = String(item.image || item.imageUrl || "").trim();
+  const previewImage = optimizeImageUrl(String(item.image || item.imageUrl || "").trim());
   const title = isAddMode ? "Add Product" : "Edit Product";
   const heading = isAddMode ? "Add a new item." : "Edit this item.";
   const note = isAddMode
@@ -598,7 +598,7 @@ function renderAdminInventoryPage(inventory, filterName = "all", searchTerm = ""
 function renderAdminInventoryRow(item) {
   const statusClass = item.stock <= 0 ? "admin-badge--empty" : item.stock <= 5 ? "admin-badge--warn" : "admin-badge--ok";
   const statusLabel = item.stock <= 0 ? "Out" : item.stock <= 5 ? "Low Stock" : "In Stock";
-  const imageUrl = String(item.imageUrl || item.image || "/assets/Vector.png");
+  const imageUrl = optimizeImageUrl(String(item.imageUrl || item.image || "/assets/Vector.png"));
   const stockState = item.stock <= 0 ? "out" : item.stock <= 5 ? "low" : "active";
 
   return `<div class="admin-table__row" data-admin-id="${escapeHtml(item.id)}" data-admin-inventory-state="${stockState}" data-admin-inventory-category="${escapeHtml(slugify(item.category || "products"))}" data-admin-search="${escapeHtml(`${item.name || ""} ${item.sku || ""} ${item.category || ""}`.toLowerCase())}">
@@ -1088,7 +1088,7 @@ function renderCategoryPage(page, inventory) {
 function renderProductCard(product, label) {
   const detailHref = `/product?slug=${encodeURIComponent(product.slug || product.id)}`;
   return `<article class="shop-product shop-product--carousel" data-product-slug="${escapeHtml(product.slug || product.id)}" data-product-card-href="${escapeHtml(detailHref)}">
-            <img class="shop-product__image" src="${escapeHtml(product.imageUrl || product.image || "/assets/Vector.png")}" alt="${escapeHtml(product.name)}" />
+            <img class="shop-product__image" src="${escapeHtml(optimizeImageUrl(product.imageUrl || product.image || "/assets/Vector.png"))}" alt="${escapeHtml(product.name)}" loading="lazy" decoding="async" />
             <h3>${escapeHtml(product.name)}</h3>
             <div class="shop-product__meta"><span>Price</span><strong>${escapeHtml(formatMoney(product.priceCents))}</strong></div>
             <a class="shop-product__details" href="${detailHref}">View Details</a>
@@ -1137,7 +1137,7 @@ function renderProductPage(product, inventory) {
       <section class="product-page">
         <div class="product-page__media">
           <p class="eyebrow product-page__eyebrow">New Arrival</p>
-          <img src="${escapeHtml(product.imageUrl || product.image || "/assets/Vector.png")}" alt="${escapeHtml(product.name)}" />
+          <img src="${escapeHtml(optimizeImageUrl(product.imageUrl || product.image || "/assets/Vector.png"))}" alt="${escapeHtml(product.name)}" loading="eager" fetchpriority="high" decoding="async" />
           <ul class="product-page__benefits">
             <li>
               <span class="eyebrow">Why You’ll Love It</span>
@@ -1316,7 +1316,7 @@ async function loadOrdersSnapshot() {
 function normalizeInventoryItem(item) {
   const stock = Math.max(0, Math.trunc(Number(item?.stock) || 0));
   const priceCents = Number.isFinite(Number(item?.priceCents)) ? Math.round(Number(item.priceCents)) : 0;
-  const imageUrl = String(item?.imageUrl || item?.image || "/assets/Vector.png");
+  const imageUrl = optimizeImageUrl(String(item?.imageUrl || item?.image || "/assets/Vector.png"));
   return {
     ...item,
     id: String(item?.id || ""),
@@ -1333,6 +1333,19 @@ function normalizeInventoryItem(item) {
     colors: normalizeList(item?.colors, ["Gold"]),
     collections: normalizeList(item?.collections, [])
   };
+}
+
+function optimizeImageUrl(url) {
+  const rawUrl = String(url || "").trim();
+  if (!rawUrl || rawUrl.startsWith("data:") || rawUrl.startsWith("/assets/") || rawUrl.startsWith("/uploads/")) {
+    return rawUrl;
+  }
+
+  if (!/^https?:\/\/res\.cloudinary\.com\//.test(rawUrl) || rawUrl.includes("/f_auto,q_84/")) {
+    return rawUrl;
+  }
+
+  return rawUrl.replace(/\/upload\/(?!f_auto,q_84\/)/, "/upload/f_auto,q_84/");
 }
 
 function normalizeList(value, fallback = []) {

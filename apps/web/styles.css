@@ -362,6 +362,14 @@ button, input { font: inherit; }
 .grid-card--text { display: flex; flex-direction: column; justify-content: center; padding: 1rem 0; }
 .grid-card--text h2 { margin: 0 0 1rem; font-size: clamp(2.2rem, 3vw, 3.3rem); }
 .grid-card--text p { max-width: 24rem; color: var(--muted); line-height: 1.8; }
+
+@media (min-width: 769px) {
+  .collection-grid__cards { align-items: start; }
+  .collection-grid__cards > .grid-card {
+    position: sticky;
+    top: 14vh;
+  }
+}
 .trusted-section, .newsletter-section, .blog-section, .site-footer, .copyright { max-width: 1220px; margin: 0 auto; padding: 2rem 1.5rem; text-align: center; }
 .trusted-section p { font-size: 1.25rem; }
 .trusted-logos { margin-top: 2rem; display: flex; justify-content: center; flex-wrap: wrap; gap: 2.5rem; color: rgba(32,26,23,.75); font-weight: 600; }

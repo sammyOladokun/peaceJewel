@@ -1,8 +1,10 @@
 const http = require("node:http");
 const fs = require("node:fs");
 const fsp = require("node:fs/promises");
+const net = require("node:net");
 const path = require("node:path");
 const crypto = require("node:crypto");
+const tls = require("node:tls");
 const postgres = require("postgres");
 
 const port = Number(process.env.PORT || 4000);
@@ -14,6 +16,7 @@ const cartStatePath = path.join(dataDir, "cart-state.json");
 const ordersPath = path.join(dataDir, "orders.json");
 const flutterwaveSecretKey = process.env.FLW_SECRET_KEY || "";
 const cloudinaryUrl = process.env.CLOUDINARY_URL || "";
+const redisUrl = String(process.env.REDIS_URL || process.env.REDIS_CACHE_URL || "").trim();
 const databaseUrl = String(process.env.DATABASE_URL || "").trim();
 const sql = databaseUrl
   ? postgres(databaseUrl, {
@@ -24,6 +27,15 @@ const sql = databaseUrl
     })
   : null;
 const webBaseUrl = (process.env.WEB_BASE_URL || "http://localhost:3000").replace(/\/+$/, "");
+const redisCache = createRedisCache(redisUrl);
+const REDIS_CACHE_TTL_SECONDS = {
+  inventory: 120,
+  orders: 60
+};
+const REDIS_CACHE_KEYS = {
+  inventory: "peacejewel:cache:inventory:v1",
+  orders: "peacejewel:cache:orders:v1"
+};
 
 const defaultInventory = [
   {
@@ -286,6 +298,11 @@ async function bootstrap() {
 }
 
 async function loadInventory() {
+  const cachedInventory = await readCachedJson(REDIS_CACHE_KEYS.inventory);
+  if (Array.isArray(cachedInventory) && cachedInventory.length) {
+    return cachedInventory.map(normalizeInventoryItem);
+  }
+
   if (sql) {
     try {
       const rows = await sql`
@@ -321,7 +338,9 @@ async function loadInventory() {
       `;
 
       if (rows.length) {
-        return rows.map(mapProductRowToInventoryItem);
+        const inventoryRows = rows.map(mapProductRowToInventoryItem);
+        await writeCachedJson(REDIS_CACHE_KEYS.inventory, inventoryRows, REDIS_CACHE_TTL_SECONDS.inventory);
+        return inventoryRows;
       }
 
       const seeded = structuredClone(defaultInventory).map(normalizeInventoryItem);
@@ -338,12 +357,15 @@ async function loadInventory() {
     if (Array.isArray(parsed) && parsed.length) {
       const normalized = parsed.map(normalizeInventoryItem);
       await saveInventory(normalized);
+      await writeCachedJson(REDIS_CACHE_KEYS.inventory, normalized, REDIS_CACHE_TTL_SECONDS.inventory);
       return normalized;
     }
   } catch {}
 
   await saveInventory(defaultInventory);
-  return structuredClone(defaultInventory).map(normalizeInventoryItem);
+  const fallbackInventory = structuredClone(defaultInventory).map(normalizeInventoryItem);
+  await writeCachedJson(REDIS_CACHE_KEYS.inventory, fallbackInventory, REDIS_CACHE_TTL_SECONDS.inventory);
+  return fallbackInventory;
 }
 
 async function loadCartStates() {
@@ -391,6 +413,11 @@ async function loadCartStates() {
 }
 
 async function loadOrders() {
+  const cachedOrders = await readCachedJson(REDIS_CACHE_KEYS.orders);
+  if (Array.isArray(cachedOrders)) {
+    return cachedOrders.map(normalizeOrder);
+  }
+
   if (sql) {
     try {
       const [orderRows, itemRows] = await Promise.all([
@@ -419,7 +446,7 @@ async function loadOrders() {
         return accumulator;
       }, {});
 
-      return orderRows.map((row) => normalizeOrder({
+      const orders = orderRows.map((row) => normalizeOrder({
         id: String(row.id || ""),
         txRef: String(row.tx_ref || ""),
         cartId: String(row.cart_id || ""),
@@ -438,6 +465,8 @@ async function loadOrders() {
         updatedAt: row.updated_at || null,
         items: itemsByOrderId[row.id] || []
       }));
+      await writeCachedJson(REDIS_CACHE_KEYS.orders, orders, REDIS_CACHE_TTL_SECONDS.orders);
+      return orders;
     } catch (error) {
       console.error("Failed to load orders from Neon", error);
     }
@@ -447,18 +476,22 @@ async function loadOrders() {
     const raw = await fsp.readFile(ordersPath, "utf8");
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) {
-      return parsed.map(normalizeOrder);
+      const orders = parsed.map(normalizeOrder);
+      await writeCachedJson(REDIS_CACHE_KEYS.orders, orders, REDIS_CACHE_TTL_SECONDS.orders);
+      return orders;
     }
   } catch {}
 
   await saveOrders([]);
+  await writeCachedJson(REDIS_CACHE_KEYS.orders, [], REDIS_CACHE_TTL_SECONDS.orders);
   return [];
 }
 
 async function saveInventory(nextInventory = inventory) {
+  const normalized = nextInventory.map(normalizeInventoryItem);
+
   if (sql) {
     try {
-      const normalized = nextInventory.map(normalizeInventoryItem);
       await sql.begin(async (trx) => {
         for (const item of normalized) {
           await trx`
@@ -518,13 +551,15 @@ async function saveInventory(nextInventory = inventory) {
           }
         }
       });
+      await writeCachedJson(REDIS_CACHE_KEYS.inventory, normalized, REDIS_CACHE_TTL_SECONDS.inventory);
       return;
     } catch (error) {
       console.error("Failed to save inventory to Neon", error);
     }
   }
 
-  await fsp.writeFile(inventoryPath, JSON.stringify(nextInventory, null, 2));
+  await fsp.writeFile(inventoryPath, JSON.stringify(normalized, null, 2));
+  await writeCachedJson(REDIS_CACHE_KEYS.inventory, normalized, REDIS_CACHE_TTL_SECONDS.inventory);
 }
 
 async function saveCartStates(nextCartStates = cartStates) {
@@ -555,9 +590,10 @@ async function saveCartStates(nextCartStates = cartStates) {
 }
 
 async function saveOrders(nextOrders = orderHistory) {
+  const normalizedOrders = nextOrders.map(normalizeOrder);
+
   if (sql) {
     try {
-      const normalizedOrders = nextOrders.map(normalizeOrder);
       await sql.begin(async (trx) => {
         await trx`DELETE FROM order_items`;
         await trx`DELETE FROM orders`;
@@ -594,13 +630,267 @@ async function saveOrders(nextOrders = orderHistory) {
           }
         }
       });
+      await writeCachedJson(REDIS_CACHE_KEYS.orders, normalizedOrders, REDIS_CACHE_TTL_SECONDS.orders);
       return;
     } catch (error) {
       console.error("Failed to save orders to Neon", error);
     }
   }
 
-  await fsp.writeFile(ordersPath, JSON.stringify(nextOrders, null, 2));
+  await fsp.writeFile(ordersPath, JSON.stringify(normalizedOrders, null, 2));
+  await writeCachedJson(REDIS_CACHE_KEYS.orders, normalizedOrders, REDIS_CACHE_TTL_SECONDS.orders);
+}
+
+async function readCachedJson(key) {
+  const client = redisCache || createRedisCache();
+  if (!client) return null;
+
+  try {
+    const value = await client.get(key);
+    if (!value) return null;
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+}
+
+async function writeCachedJson(key, value, ttlSeconds) {
+  const client = redisCache || createRedisCache();
+  if (!client) return false;
+
+  try {
+    await client.set(key, JSON.stringify(value), ttlSeconds);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function createRedisCache() {
+  if (!redisUrl) return null;
+  if (!createRedisCache.instance) {
+    createRedisCache.instance = new RedisCacheClient(redisUrl);
+  }
+  return createRedisCache.instance;
+}
+
+class RedisCacheClient {
+  constructor(value) {
+    this.value = value;
+    this.socket = null;
+    this.connecting = null;
+    this.buffer = Buffer.alloc(0);
+    this.pending = [];
+    this.disabled = false;
+    this.url = null;
+  }
+
+  async get(key) {
+    const reply = await this.send("GET", key);
+    return typeof reply === "string" ? reply : null;
+  }
+
+  async set(key, value, ttlSeconds) {
+    const ttl = Math.max(1, Math.trunc(Number(ttlSeconds || 0)));
+    const args = ["SET", key, value];
+    if (ttl > 0) {
+      args.push("EX", String(ttl));
+    }
+    await this.send(...args);
+    return true;
+  }
+
+  async del(key) {
+    await this.send("DEL", key);
+    return true;
+  }
+
+  async send(...args) {
+    const socket = await this.connect();
+    if (!socket) return null;
+
+    return new Promise((resolve, reject) => {
+      this.pending.push({ resolve, reject });
+      socket.write(encodeRedisCommand(args));
+    });
+  }
+
+  async connect() {
+    if (this.disabled) return null;
+    if (this.socket) return this.socket;
+    if (this.connecting) return this.connecting;
+
+    this.connecting = this.open().finally(() => {
+      this.connecting = null;
+    });
+
+    return this.connecting;
+  }
+
+  async open() {
+    let url;
+    try {
+      url = new URL(this.value);
+    } catch {
+      this.disabled = true;
+      return null;
+    }
+
+    if (!["redis:", "rediss:"].includes(url.protocol)) {
+      this.disabled = true;
+      return null;
+    }
+
+    if (url.protocol === "redis:" && !isLocalRedisHost(url.hostname)) {
+      console.warn("Redis URL should use rediss:// outside local development.");
+    }
+
+    const useTls = url.protocol === "rediss:";
+    const port = Number(url.port || (useTls ? 6380 : 6379));
+    const hostname = url.hostname;
+    const databaseIndex = Number(String(url.pathname || "/").replace(/^\//, "")) || 0;
+    const username = decodeURIComponent(url.username || "");
+    const password = decodeURIComponent(url.password || "");
+
+    const socket = useTls
+      ? tls.connect({ host: hostname, port, servername: hostname, rejectUnauthorized: true })
+      : net.createConnection({ host: hostname, port });
+
+    socket.setNoDelay(true);
+    socket.on("data", (chunk) => this.handleData(chunk));
+    socket.on("error", () => this.dropSocket());
+    socket.on("close", () => this.dropSocket());
+
+    try {
+      await new Promise((resolve, reject) => {
+        socket.once("connect", resolve);
+        socket.once("secureConnect", resolve);
+        socket.once("error", reject);
+      });
+
+      this.socket = socket;
+
+      if (password) {
+        if (username) {
+          await this.send("AUTH", username, password);
+        } else {
+          await this.send("AUTH", password);
+        }
+      }
+
+      if (databaseIndex > 0) {
+        await this.send("SELECT", String(databaseIndex));
+      }
+
+      return socket;
+    } catch (error) {
+      this.disabled = true;
+      this.dropSocket();
+      return null;
+    }
+  }
+
+  dropSocket() {
+    this.socket = null;
+    this.buffer = Buffer.alloc(0);
+
+    while (this.pending.length) {
+      const pending = this.pending.shift();
+      pending?.resolve?.(null);
+    }
+  }
+
+  handleData(chunk) {
+    this.buffer = Buffer.concat([this.buffer, chunk]);
+
+    while (true) {
+      const parsed = parseRedisReply(this.buffer);
+      if (!parsed.complete) return;
+      this.buffer = this.buffer.slice(parsed.consumed);
+      const next = this.pending.shift();
+      if (!next) continue;
+
+      if (parsed.value instanceof Error) {
+        next.reject(parsed.value);
+      } else {
+        next.resolve(parsed.value);
+      }
+    }
+  }
+}
+
+function encodeRedisCommand(args) {
+  const parts = args.map((part) => Buffer.from(String(part)));
+  const chunks = [Buffer.from(`*${parts.length}\r\n`)];
+  for (const part of parts) {
+    chunks.push(Buffer.from(`$${part.length}\r\n`));
+    chunks.push(part);
+    chunks.push(Buffer.from("\r\n"));
+  }
+  return Buffer.concat(chunks);
+}
+
+function parseRedisReply(buffer) {
+  if (!buffer.length) return { complete: false, consumed: 0, value: null };
+
+  const prefix = String.fromCharCode(buffer[0]);
+  const lineEnd = buffer.indexOf("\r\n");
+  if (lineEnd === -1) return { complete: false, consumed: 0, value: null };
+
+  const line = buffer.slice(1, lineEnd).toString("utf8");
+  const consumedLine = lineEnd + 2;
+
+  if (prefix === "+") {
+    return { complete: true, consumed: consumedLine, value: line };
+  }
+
+  if (prefix === "-") {
+    return { complete: true, consumed: consumedLine, value: new Error(line) };
+  }
+
+  if (prefix === ":") {
+    return { complete: true, consumed: consumedLine, value: Number(line) };
+  }
+
+  if (prefix === "$") {
+    const length = Number(line);
+    if (Number.isNaN(length)) return { complete: true, consumed: consumedLine, value: null };
+    if (length === -1) {
+      return { complete: true, consumed: consumedLine, value: null };
+    }
+
+    const end = consumedLine + length;
+    if (buffer.length < end + 2) return { complete: false, consumed: 0, value: null };
+    return {
+      complete: true,
+      consumed: end + 2,
+      value: buffer.slice(consumedLine, end).toString("utf8")
+    };
+  }
+
+  if (prefix === "*") {
+    const count = Number(line);
+    if (Number.isNaN(count) || count === -1) {
+      return { complete: true, consumed: consumedLine, value: null };
+    }
+
+    let cursor = consumedLine;
+    const items = [];
+    for (let index = 0; index < count; index += 1) {
+      const parsed = parseRedisReply(buffer.slice(cursor));
+      if (!parsed.complete) return { complete: false, consumed: 0, value: null };
+      items.push(parsed.value);
+      cursor += parsed.consumed;
+    }
+
+    return { complete: true, consumed: cursor, value: items };
+  }
+
+  return { complete: true, consumed: consumedLine, value: line };
+}
+
+function isLocalRedisHost(hostname) {
+  return ["localhost", "127.0.0.1", "::1"].includes(String(hostname || "").toLowerCase());
 }
 
 async function saveUpload(body) {
@@ -701,11 +991,24 @@ function mapProductRowToInventoryItem(row) {
   });
 }
 
+function optimizeImageUrl(url) {
+  const rawUrl = String(url || "").trim();
+  if (!rawUrl || rawUrl.startsWith("data:") || rawUrl.startsWith("/assets/") || rawUrl.startsWith("/uploads/")) {
+    return rawUrl;
+  }
+
+  if (!/^https?:\/\/res\.cloudinary\.com\//.test(rawUrl) || rawUrl.includes("/f_auto,q_84/")) {
+    return rawUrl;
+  }
+
+  return rawUrl.replace(/\/upload\/(?!f_auto,q_84\/)/, "/upload/f_auto,q_84/");
+}
+
 function normalizeCartItem(item) {
   return {
     id: String(item.id || ""),
     name: String(item.name || "Product"),
-    image: String(item.image || item.imageUrl || "/assets/Vector.png"),
+    image: optimizeImageUrl(String(item.image || item.imageUrl || "/assets/Vector.png")),
     priceCents: Math.max(0, Math.round(Number(item.priceCents ?? item.price ?? 0))),
     quantity: Math.max(1, clampStock(item.quantity || 1)),
     variant: String(item.variant || ""),
@@ -902,7 +1205,7 @@ function normalizeInventoryItem(item) {
     name,
     category,
     description: String(item.description || ""),
-    imageUrl: String(item.imageUrl || item.image || "/assets/Vector.png"),
+    imageUrl: optimizeImageUrl(String(item.imageUrl || item.image || "/assets/Vector.png")),
     priceCents,
     stock,
     status: item.status || resolveStatus(stock),
@@ -940,7 +1243,7 @@ function toCatalogProduct(item) {
     name: item.name,
     category: item.category,
     description: item.description,
-    imageUrl: item.imageUrl,
+    imageUrl: optimizeImageUrl(item.imageUrl),
     priceCents: item.priceCents,
     price: formatMoney(item.priceCents),
     stock: item.stock,
