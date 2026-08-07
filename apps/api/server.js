@@ -28,6 +28,8 @@ const sql = databaseUrl
   : null;
 const webBaseUrl = (process.env.WEB_BASE_URL || "http://localhost:3000").replace(/\/+$/, "");
 const redisCache = createRedisCache(redisUrl);
+const REDIS_CONNECT_TIMEOUT_MS = Number(process.env.REDIS_CONNECT_TIMEOUT_MS || 350);
+const REDIS_COMMAND_TIMEOUT_MS = Number(process.env.REDIS_COMMAND_TIMEOUT_MS || 350);
 const REDIS_CACHE_TTL_SECONDS = {
   inventory: 120,
   orders: 60
@@ -710,7 +712,12 @@ class RedisCacheClient {
     if (!socket) return null;
 
     return new Promise((resolve, reject) => {
-      this.pending.push({ resolve, reject });
+      const pending = { resolve, reject, timer: null };
+      pending.timer = setTimeout(() => {
+        this.removePending(pending);
+        resolve(null);
+      }, REDIS_COMMAND_TIMEOUT_MS);
+      this.pending.push(pending);
       socket.write(encodeRedisCommand(args));
     });
   }
@@ -720,7 +727,7 @@ class RedisCacheClient {
     if (this.socket) return this.socket;
     if (this.connecting) return this.connecting;
 
-    this.connecting = this.open().finally(() => {
+    this.connecting = withTimeout(this.open(), REDIS_CONNECT_TIMEOUT_MS).finally(() => {
       this.connecting = null;
     });
 
@@ -762,11 +769,12 @@ class RedisCacheClient {
     socket.on("close", () => this.dropSocket());
 
     try {
-      await new Promise((resolve, reject) => {
-        socket.once("connect", resolve);
-        socket.once("secureConnect", resolve);
-        socket.once("error", reject);
-      });
+      const connected = await waitForSocketReady(socket, REDIS_CONNECT_TIMEOUT_MS);
+      if (!connected) {
+        this.disabled = true;
+        this.dropSocket();
+        return null;
+      }
 
       this.socket = socket;
 
@@ -796,7 +804,18 @@ class RedisCacheClient {
 
     while (this.pending.length) {
       const pending = this.pending.shift();
+      if (pending?.timer) clearTimeout(pending.timer);
       pending?.resolve?.(null);
+    }
+  }
+
+  removePending(pendingEntry) {
+    const index = this.pending.indexOf(pendingEntry);
+    if (index >= 0) {
+      this.pending.splice(index, 1);
+    }
+    if (pendingEntry?.timer) {
+      clearTimeout(pendingEntry.timer);
     }
   }
 
@@ -809,6 +828,7 @@ class RedisCacheClient {
       this.buffer = this.buffer.slice(parsed.consumed);
       const next = this.pending.shift();
       if (!next) continue;
+      if (next.timer) clearTimeout(next.timer);
 
       if (parsed.value instanceof Error) {
         next.reject(parsed.value);
@@ -891,6 +911,37 @@ function parseRedisReply(buffer) {
 
 function isLocalRedisHost(hostname) {
   return ["localhost", "127.0.0.1", "::1"].includes(String(hostname || "").toLowerCase());
+}
+
+function waitForSocketReady(socket, timeoutMs) {
+  const timeout = Math.max(1, Math.trunc(Number(timeoutMs || 0)));
+  return new Promise((resolve) => {
+    let settled = false;
+    const cleanup = () => {
+      clearTimeout(timer);
+      socket.off("connect", onReady);
+      socket.off("secureConnect", onReady);
+      socket.off("error", onError);
+    };
+    const finish = (result) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      resolve(result);
+    };
+    const onReady = () => finish(true);
+    const onError = () => finish(false);
+    const timer = setTimeout(() => {
+      try {
+        socket.destroy();
+      } catch {}
+      finish(false);
+    }, timeout);
+
+    socket.once("connect", onReady);
+    socket.once("secureConnect", onReady);
+    socket.once("error", onError);
+  });
 }
 
 async function saveUpload(body) {
