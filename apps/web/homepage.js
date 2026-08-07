@@ -123,18 +123,18 @@
 
     const viewportHeight = window.innerHeight || 1;
     const rect = storyCard.getBoundingClientRect();
-    const entryPoint = viewportHeight * 0.84;
-    const exitPoint = -viewportHeight * 0.2;
-    const progress = clamp((entryPoint - rect.top) / (entryPoint - exitPoint), 0, 1);
     const mobile = isStoryMobile();
     const startScale = mobile ? 1 : 0.72;
     const endScale = mobile ? 2.68 : 1;
-    const startY = mobile ? 0 : 26;
+    const centerOffset = Math.abs((rect.top + rect.height / 2) - viewportHeight / 2);
+    const maxOffset = viewportHeight * 0.75;
+    const centeredProgress = clamp(1 - centerOffset / maxOffset, 0, 1);
+    const easedProgress = centeredProgress * centeredProgress * (3 - 2 * centeredProgress);
 
     gsap.set(storyRing, {
       opacity: 1,
-      scale: startScale + (endScale - startScale) * progress,
-      y: startY * (1 - progress)
+      scale: startScale + (endScale - startScale) * easedProgress,
+      y: mobile ? 0 : (1 - easedProgress) * 16
     });
   };
 
