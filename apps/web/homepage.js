@@ -125,15 +125,15 @@
     const rect = storyCard.getBoundingClientRect();
     const mobile = isStoryMobile();
     const startScale = mobile ? 1 : 0.72;
-    const endScale = mobile ? 2.68 : 1;
+    const peakScale = mobile ? 2.1 : 0.88;
     const centerOffset = Math.abs((rect.top + rect.height / 2) - viewportHeight / 2);
-    const maxOffset = viewportHeight * 0.75;
+    const maxOffset = viewportHeight / 2 + rect.height / 2;
     const centeredProgress = clamp(1 - centerOffset / maxOffset, 0, 1);
     const easedProgress = centeredProgress * centeredProgress * (3 - 2 * centeredProgress);
 
     gsap.set(storyRing, {
       opacity: 1,
-      scale: startScale + (endScale - startScale) * easedProgress,
+      scale: startScale + (peakScale - startScale) * easedProgress,
       y: mobile ? 0 : (1 - easedProgress) * 16
     });
   };
